@@ -48,9 +48,17 @@ def get_industry_font(
     """
     candidates = []
 
+    # Check project font files (including static folder fallbacks)
+    font_paths = [
+        DEFAULT_FONT_PATH,
+        BASE_DIR / "static" / "fonts" / "industry.otf",
+        Path("industry.otf"),
+        Path("static/fonts/industry.otf")
+    ]
+    valid_local_fonts = [str(p) for p in font_paths if p.exists()]
+
     if font_choice == "industry":
-        if DEFAULT_FONT_PATH.exists():
-            candidates.append(str(DEFAULT_FONT_PATH))
+        candidates.extend(valid_local_fonts)
     elif font_choice == "arial":
         candidates.extend([
             r"C:\Windows\Fonts\arialbd.ttf",
@@ -66,8 +74,8 @@ def get_industry_font(
         ])
 
     # Standard fallback list
+    candidates.extend(valid_local_fonts)
     candidates.extend([
-        str(DEFAULT_FONT_PATH),
         r"C:\Windows\Fonts\arialbd.ttf",       # Arial Bold
         r"C:\Windows\Fonts\seguisb.ttf",       # Segoe UI SemiBold
         r"C:\Windows\Fonts\calibrib.ttf",      # Calibri Bold
@@ -97,13 +105,22 @@ def get_industry_font(
 
 
 def load_default_logo(path: Union[str, Path]) -> Optional[Image.Image]:
-    """Helper to safely load and convert logo image."""
+    """Helper to safely load and convert logo image with fallbacks."""
     try:
-        if os.path.exists(path):
-            with Image.open(path) as img:
+        p = Path(path)
+        if not p.exists():
+            alt = BASE_DIR / "static" / p.name
+            if alt.exists():
+                p = alt
+            else:
+                alt2 = Path("static") / p.name
+                if alt2.exists():
+                    p = alt2
+        if p.exists():
+            with Image.open(p) as img:
                 return img.convert("RGBA")
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"Error loading logo from {path}: {e}")
     return None
 
 

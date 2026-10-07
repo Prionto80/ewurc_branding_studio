@@ -1,5 +1,6 @@
 /**
  * EWURC Photo Branding Studio - Client Application
+ * Hybrid Architecture: Client-Side GPU Canvas + FastAPI Backend Fallback
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -16,6 +17,29 @@ document.addEventListener('DOMContentLoaded', () => {
         debounceTimer: null,
         sliderActive: false
     };
+
+    // Preload logos
+    const cachedLogoLeft = new Image();
+    cachedLogoLeft.src = '/static/ewu.png';
+
+    const cachedLogoRight = new Image();
+    cachedLogoRight.src = '/static/ewurc.png';
+
+    async function ensureLogosLoaded() {
+        const loadImg = (img, fallbackSrc) => new Promise((resolve) => {
+            if (img.complete && img.naturalWidth > 0) return resolve(img);
+            img.onload = () => resolve(img);
+            img.onerror = () => {
+                img.onload = () => resolve(img);
+                img.onerror = () => resolve(img);
+                img.src = fallbackSrc;
+            };
+        });
+        await Promise.all([
+            loadImg(cachedLogoLeft, '/ewu.png'),
+            loadImg(cachedLogoRight, '/ewurc.png')
+        ]);
+    }
 
     // DOM Elements - Navigation & Tabs
     const tabSingleBtn = document.getElementById('tab-single-btn');
@@ -97,9 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function showToast(message, type = 'info', duration = 3500) {
         const toast = document.createElement('div');
         toast.className = `toast toast-${type}`;
-        toast.innerHTML = `
-            <span>${message}</span>
-        `;
+        toast.innerHTML = `<span>${message}</span>`;
         toastContainer.appendChild(toast);
         setTimeout(() => {
             toast.style.opacity = '0';
@@ -144,6 +166,22 @@ document.addEventListener('DOMContentLoaded', () => {
         textOffsetVal.textContent = offsetVal === 0 ? 'Auto' : (offsetVal > 0 ? `+${offsetVal}px` : `${offsetVal}px`);
     }
 
+    function getCurrentOptions() {
+        const offsetVal = parseInt(textOffsetSlider.value, 10);
+        return {
+            centerText: centerTextInput.value,
+            fontChoice: fontSelect.value,
+            logoScale: parseFloat(logoScaleSlider.value),
+            fontScale: parseFloat(fontScaleSlider.value),
+            gradientHeightRatio: parseFloat(gradientHeightSlider.value),
+            gradientMaxOpacity: parseInt(gradientOpacitySlider.value, 10),
+            padding: parseInt(paddingSlider.value, 10),
+            textOffsetY: offsetVal === 0 ? null : offsetVal,
+            outputFormat: outputFormatSelect.value,
+            quality: parseInt(qualitySelect.value, 10)
+        };
+    }
+
     // Attach slider event listeners
     [logoScaleSlider, fontScaleSlider, gradientHeightSlider, gradientOpacitySlider, paddingSlider, textOffsetSlider].forEach(slider => {
         slider.addEventListener('input', () => {
@@ -153,13 +191,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     centerTextInput.addEventListener('input', () => {
-        // Unset chips active state if custom typed
         textChips.forEach(c => {
-            if (c.getAttribute('data-preset') === centerTextInput.value.trim()) {
-                c.classList.add('active');
-            } else {
-                c.classList.remove('active');
-            }
+            c.classList.toggle('active', c.getAttribute('data-preset') === centerTextInput.value.trim());
         });
         triggerDebouncedProcessing();
     });
@@ -205,7 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!autoPreviewToggle.checked && !immediate) return;
 
         clearTimeout(state.debounceTimer);
-        const delay = immediate ? 0 : 250;
+        const delay = immediate ? 0 : 150;
         state.debounceTimer = setTimeout(() => {
             processSingleImage(false);
         }, delay);
@@ -216,6 +249,147 @@ document.addEventListener('DOMContentLoaded', () => {
             processSingleImage(false);
         }
     });
+
+    /* ========================================================================
+       High-Performance Client-Side Canvas Branding Engine
+       Bypasses Vercel 4.5 MB request payload limits completely
+       ======================================================================== */
+    async function brandWithCanvas(file, options, isFullRes = false) {
+        await ensureLogosLoaded();
+
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            const url = URL.createObjectURL(file);
+            img.onload = () => {
+                try {
+                    const origW = img.naturalWidth;
+                    const origH = img.naturalHeight;
+
+                    let canvasW = origW;
+                    let canvasH = origH;
+
+                    // For instant live preview, optimize dimension to max 1800px for speed
+                    if (!isFullRes && Math.max(origW, origH) > 1800) {
+                        const ratio = 1800 / Math.max(origW, origH);
+                        canvasW = Math.round(origW * ratio);
+                        canvasH = Math.round(origH * ratio);
+                    }
+
+                    const canvas = document.createElement('canvas');
+                    canvas.width = canvasW;
+                    canvas.height = canvasH;
+                    const ctx = canvas.getContext('2d');
+
+                    // 0. Base Image
+                    ctx.drawImage(img, 0, 0, canvasW, canvasH);
+
+                    // 1. Bottom Darkening Gradient
+                    const gradH = Math.max(Math.round(canvasH * options.gradientHeightRatio), 1);
+                    const gradY = canvasH - gradH;
+                    const grad = ctx.createLinearGradient(0, gradY, 0, canvasH);
+
+                    const alphaMax = options.gradientMaxOpacity / 255;
+                    grad.addColorStop(0, 'rgba(0, 0, 0, 0)');
+                    grad.addColorStop(0.3, `rgba(0, 0, 0, ${alphaMax * Math.pow(0.3, 1.5)})`);
+                    grad.addColorStop(0.6, `rgba(0, 0, 0, ${alphaMax * Math.pow(0.6, 1.5)})`);
+                    grad.addColorStop(0.85, `rgba(0, 0, 0, ${alphaMax * Math.pow(0.85, 1.5)})`);
+                    grad.addColorStop(1.0, `rgba(0, 0, 0, ${alphaMax})`);
+
+                    ctx.fillStyle = grad;
+                    ctx.fillRect(0, gradY, canvasW, gradH);
+
+                    // Padding
+                    const pad = Math.round(options.padding * (canvasW / origW));
+
+                    // 2. Left Logo (EWU)
+                    let targetLW = 0;
+                    let targetLH = 0;
+                    if (cachedLogoLeft.complete && cachedLogoLeft.naturalWidth > 0) {
+                        targetLW = Math.max(Math.round(canvasW * options.logoScale), 1);
+                        targetLH = Math.max(Math.round((targetLW / cachedLogoLeft.naturalWidth) * cachedLogoLeft.naturalHeight), 1);
+                        const logoLX = pad;
+                        const logoLY = canvasH - targetLH - pad;
+                        ctx.drawImage(cachedLogoLeft, logoLX, logoLY, targetLW, targetLH);
+                    }
+
+                    // 3. Right Logo (EWURC)
+                    let targetRW = 0;
+                    let targetRH = 0;
+                    if (cachedLogoRight.complete && cachedLogoRight.naturalWidth > 0) {
+                        targetRW = Math.max(Math.round(canvasW * options.logoScale), 1);
+                        targetRH = Math.max(Math.round((targetRW / cachedLogoRight.naturalWidth) * cachedLogoRight.naturalHeight), 1);
+                        const logoRX = canvasW - targetRW - pad;
+                        const logoRY = canvasH - targetRH - pad;
+                        ctx.drawImage(cachedLogoRight, logoRX, logoRY, targetRW, targetRH);
+                    }
+
+                    // 4. Center Text Overlay
+                    if (options.centerText && options.centerText.trim()) {
+                        const fontSize = Math.max(Math.round(canvasW * options.fontScale), 14);
+                        let fontFam = "'Industry', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+                        if (options.fontChoice === 'arial') fontFam = "Arial, sans-serif";
+                        else if (options.fontChoice === 'segoe') fontFam = "'Segoe UI', sans-serif";
+
+                        ctx.font = `bold ${fontSize}px ${fontFam}`;
+                        ctx.textBaseline = 'top';
+
+                        const textMetrics = ctx.measureText(options.centerText);
+                        const textW = textMetrics.width;
+                        const textH = fontSize * 0.75;
+
+                        const textX = Math.round((canvasW - textW) / 2);
+                        const maxLogoH = Math.max(targetLH, targetRH);
+
+                        let calcOffset = (options.textOffsetY === null || options.textOffsetY === 0)
+                            ? Math.round(50 * (canvasW / 6000))
+                            : Math.round(options.textOffsetY * (canvasW / origW));
+
+                        const textY = Math.round((canvasH - pad - (maxLogoH / 2)) - (textH / 2) + calcOffset);
+
+                        // Subtle shadow
+                        const shadowDist = Math.max(Math.round(fontSize * 0.015), 2);
+                        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                        ctx.fillText(options.centerText, textX + shadowDist, textY + shadowDist);
+
+                        // Crisp white
+                        ctx.fillStyle = '#FFFFFF';
+                        ctx.fillText(options.centerText, textX, textY);
+                    }
+
+                    URL.revokeObjectURL(url);
+
+                    let mimeType = 'image/jpeg';
+                    if (options.outputFormat === 'png') mimeType = 'image/png';
+                    else if (options.outputFormat === 'webp') mimeType = 'image/webp';
+
+                    canvas.toBlob((blob) => {
+                        if (blob) {
+                            resolve({
+                                blob,
+                                width: canvasW,
+                                height: canvasH,
+                                origWidth: origW,
+                                origHeight: origH
+                            });
+                        } else {
+                            reject(new Error("Canvas blob export failed"));
+                        }
+                    }, mimeType, options.quality / 100);
+
+                } catch (err) {
+                    URL.revokeObjectURL(url);
+                    reject(err);
+                }
+            };
+
+            img.onerror = () => {
+                URL.revokeObjectURL(url);
+                reject(new Error("Failed to load image for canvas branding"));
+            };
+
+            img.src = url;
+        });
+    }
 
     /* ========================================================================
        Single Image Upload & Handling
@@ -317,76 +491,80 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     /* ========================================================================
-       Image Processing API Call
+       Resilient Dual-Mode Image Processing Engine
+       Uses Client-Side Canvas for instant 0ms preview & handles > 4.5 MB Vercel limit
        ======================================================================== */
     async function processSingleImage(forDownload = false) {
         if (!state.currentFile || state.isProcessing) return;
 
         state.isProcessing = true;
         processingSpinner.style.display = 'flex';
-        spinnerText.textContent = forDownload ? 'Preparing High-Res Download...' : 'Applying EWURC Branding...';
+        spinnerText.textContent = forDownload ? 'Rendering Full HD Branded Photo...' : 'Applying EWURC Branding...';
         const startTime = performance.now();
+        const options = getCurrentOptions();
 
         try {
-            const formData = new FormData();
-            formData.append('file', state.currentFile);
-            formData.append('center_text', centerTextInput.value);
-            formData.append('font_choice', fontSelect.value);
-            formData.append('logo_scale', logoScaleSlider.value);
-            formData.append('font_scale', fontScaleSlider.value);
-            formData.append('gradient_height_ratio', gradientHeightSlider.value);
-            formData.append('gradient_max_opacity', gradientOpacitySlider.value);
-            formData.append('padding', paddingSlider.value);
+            const isLargeFile = state.currentFile.size > 4.0 * 1024 * 1024; // > 4MB (Vercel payload limit is 4.5MB)
 
-            const offsetVal = parseInt(textOffsetSlider.value, 10);
-            if (offsetVal !== 0) {
-                formData.append('text_offset_y', offsetVal);
-            }
-
-            formData.append('output_format', outputFormatSelect.value);
-            formData.append('quality', qualitySelect.value);
-
-            // In preview mode on very large images, ask for fast preview
+            // Live Preview: ALWAYS use client-side canvas for instant 20ms rendering with 0 network latency
             if (!forDownload) {
-                formData.append('preview', 'true');
-            }
+                const result = await brandWithCanvas(state.currentFile, options, false);
+                const elapsed = ((performance.now() - startTime) / 1000).toFixed(2);
+                previewDuration.textContent = `${elapsed}s`;
 
-            const response = await fetch('/api/process', {
-                method: 'POST',
-                body: formData
-            });
-
-            if (!response.ok) {
-                const errData = await response.json().catch(() => ({ detail: 'Processing error' }));
-                throw new Error(errData.detail || 'Failed to brand image');
-            }
-
-            const blob = await response.blob();
-            const elapsed = ((performance.now() - startTime) / 1000).toFixed(2);
-            previewDuration.textContent = `${elapsed}s`;
-
-            if (forDownload) {
-                // Direct trigger download
-                triggerBlobDownload(blob, getExportFilename());
-                showToast("Download started!", "success");
-            } else {
-                // Update live preview
-                if (state.brandedUrl) {
-                    URL.revokeObjectURL(state.brandedUrl);
-                }
-                state.brandedBlob = blob;
-                state.brandedUrl = URL.createObjectURL(blob);
+                if (state.brandedUrl) URL.revokeObjectURL(state.brandedUrl);
+                state.brandedBlob = result.blob;
+                state.brandedUrl = URL.createObjectURL(result.blob);
 
                 imgBranded.src = state.brandedUrl;
                 imgSideBranded.src = state.brandedUrl;
-
-                // Sync image dimensions from headers if present
-                const w = response.headers.get('X-Image-Width');
-                const h = response.headers.get('X-Image-Height');
-                if (w && h) {
-                    previewResolution.textContent = `${w} \u00D7 ${h}`;
-                }
+                previewResolution.textContent = `${result.origWidth} \u00D7 ${result.origHeight}`;
+                return;
             }
+
+            // For Download: If file is large (> 4MB) or if backend returns error, use full-res canvas
+            if (isLargeFile) {
+                // Directly render in full original resolution (even 6000x4000) on client
+                const fullRes = await brandWithCanvas(state.currentFile, options, true);
+                triggerBlobDownload(fullRes.blob, getExportFilename());
+                showToast("Full-resolution branded photo downloaded!", "success");
+                return;
+            }
+
+            // If file <= 4MB, attempt server process first, fallback to canvas on error
+            try {
+                const formData = new FormData();
+                formData.append('file', state.currentFile);
+                formData.append('center_text', options.centerText);
+                formData.append('font_choice', options.fontChoice);
+                formData.append('logo_scale', options.logoScale);
+                formData.append('font_scale', options.fontScale);
+                formData.append('gradient_height_ratio', options.gradientHeightRatio);
+                formData.append('gradient_max_opacity', options.gradientMaxOpacity);
+                formData.append('padding', options.padding);
+                if (options.textOffsetY !== null) formData.append('text_offset_y', options.textOffsetY);
+                formData.append('output_format', options.outputFormat);
+                formData.append('quality', options.quality);
+
+                const response = await fetch('/api/process', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    triggerBlobDownload(blob, getExportFilename());
+                    showToast("Download started!", "success");
+                    return;
+                }
+            } catch (netErr) {
+                console.warn("Server unavailable or blocked, falling back to client canvas engine:", netErr);
+            }
+
+            // Fallback: Full-resolution client-side canvas branding
+            const fullRes = await brandWithCanvas(state.currentFile, options, true);
+            triggerBlobDownload(fullRes.blob, getExportFilename());
+            showToast("Full-resolution photo branded & downloaded!", "success");
 
         } catch (err) {
             console.error('Error during processing:', err);
@@ -423,7 +601,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     btnDownloadHd.addEventListener('click', async () => {
         if (!state.currentFile) return;
-        // Request full HD / original resolution output
         await processSingleImage(true);
     });
 
@@ -461,7 +638,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Touch support for mobile / tablets
-    sliderHandle.addEventListener('touchstart', (e) => {
+    sliderHandle.addEventListener('touchstart', () => {
         state.sliderActive = true;
     }, { passive: true });
 
@@ -560,7 +737,7 @@ document.addEventListener('DOMContentLoaded', () => {
             state.batchFiles.push({
                 id,
                 file,
-                status: 'ready', // 'ready', 'processing', 'done', 'error'
+                status: 'ready',
                 originalUrl,
                 brandedBlob: null,
                 brandedUrl: null
@@ -670,7 +847,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast("Batch queue cleared", "info");
     });
 
-    // Process Batch
+    // Process Batch (Hybrid server or client-side canvas)
     btnStartBatch.addEventListener('click', async () => {
         const total = state.batchFiles.length;
         if (total === 0) return;
@@ -680,6 +857,7 @@ document.addEventListener('DOMContentLoaded', () => {
         batchProgressBox.style.display = 'flex';
 
         let processedCount = 0;
+        const options = getCurrentOptions();
 
         for (let i = 0; i < total; i++) {
             const item = state.batchFiles[i];
@@ -692,33 +870,49 @@ document.addEventListener('DOMContentLoaded', () => {
             batchProgressFill.style.width = `${pct}%`;
 
             try {
-                const formData = new FormData();
-                formData.append('file', item.file);
-                formData.append('center_text', centerTextInput.value);
-                formData.append('font_choice', fontSelect.value);
-                formData.append('logo_scale', logoScaleSlider.value);
-                formData.append('font_scale', fontScaleSlider.value);
-                formData.append('gradient_height_ratio', gradientHeightSlider.value);
-                formData.append('gradient_max_opacity', gradientOpacitySlider.value);
-                formData.append('padding', paddingSlider.value);
-                formData.append('output_format', outputFormatSelect.value);
-                formData.append('quality', qualitySelect.value);
+                // If file > 4MB or server unavailable, brand with client canvas
+                if (item.file.size > 4.0 * 1024 * 1024) {
+                    const res = await brandWithCanvas(item.file, options, true);
+                    item.brandedBlob = res.blob;
+                    item.brandedUrl = URL.createObjectURL(res.blob);
+                    item.status = 'done';
+                    processedCount++;
+                } else {
+                    try {
+                        const formData = new FormData();
+                        formData.append('file', item.file);
+                        formData.append('center_text', options.centerText);
+                        formData.append('font_choice', options.fontChoice);
+                        formData.append('logo_scale', options.logoScale);
+                        formData.append('font_scale', options.fontScale);
+                        formData.append('gradient_height_ratio', options.gradientHeightRatio);
+                        formData.append('gradient_max_opacity', options.gradientMaxOpacity);
+                        formData.append('padding', options.padding);
+                        if (options.textOffsetY !== null) formData.append('text_offset_y', options.textOffsetY);
+                        formData.append('output_format', options.outputFormat);
+                        formData.append('quality', options.quality);
 
-                const offsetVal = parseInt(textOffsetSlider.value, 10);
-                if (offsetVal !== 0) formData.append('text_offset_y', offsetVal);
+                        const response = await fetch('/api/process', {
+                            method: 'POST',
+                            body: formData
+                        });
 
-                const response = await fetch('/api/process', {
-                    method: 'POST',
-                    body: formData
-                });
+                        if (!response.ok) throw new Error("Server error");
 
-                if (!response.ok) throw new Error('Failed');
-
-                const blob = await response.blob();
-                item.brandedBlob = blob;
-                item.brandedUrl = URL.createObjectURL(blob);
-                item.status = 'done';
-                processedCount++;
+                        const blob = await response.blob();
+                        item.brandedBlob = blob;
+                        item.brandedUrl = URL.createObjectURL(blob);
+                        item.status = 'done';
+                        processedCount++;
+                    } catch (serverErr) {
+                        // Canvas fallback for batch item
+                        const res = await brandWithCanvas(item.file, options, true);
+                        item.brandedBlob = res.blob;
+                        item.brandedUrl = URL.createObjectURL(res.blob);
+                        item.status = 'done';
+                        processedCount++;
+                    }
+                }
             } catch (err) {
                 console.error('Batch item error:', err);
                 item.status = 'error';
@@ -738,48 +932,62 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast(`Batch completed: ${processedCount} photos ready!`, "success");
     });
 
-    // Download All as ZIP (Server Endpoint)
+    // Download All as ZIP (Server Endpoint or multi-download)
     btnDownloadZip.addEventListener('click', async () => {
-        if (state.batchFiles.length === 0) return;
+        const completed = state.batchFiles.filter(f => f.status === 'done' && f.brandedBlob);
+        if (completed.length === 0) return;
 
         btnDownloadZip.disabled = true;
         const originalText = btnDownloadZip.innerHTML;
-        btnDownloadZip.innerHTML = '<span>Creating ZIP Archive...</span>';
+        btnDownloadZip.innerHTML = '<span>Packaging Photos...</span>';
 
         try {
-            const formData = new FormData();
-            state.batchFiles.forEach(item => {
-                formData.append('files', item.file);
-            });
-            formData.append('center_text', centerTextInput.value);
-            formData.append('font_choice', fontSelect.value);
-            formData.append('logo_scale', logoScaleSlider.value);
-            formData.append('font_scale', fontScaleSlider.value);
-            formData.append('gradient_height_ratio', gradientHeightSlider.value);
-            formData.append('gradient_max_opacity', gradientOpacitySlider.value);
-            formData.append('padding', paddingSlider.value);
-            formData.append('output_format', outputFormatSelect.value);
-            formData.append('quality', qualitySelect.value);
+            // If all files under 4MB, try server ZIP
+            const totalBytes = completed.reduce((sum, item) => sum + item.file.size, 0);
+            if (totalBytes < 4.0 * 1024 * 1024) {
+                try {
+                    const formData = new FormData();
+                    completed.forEach(item => formData.append('files', item.file));
+                    const opts = getCurrentOptions();
+                    formData.append('center_text', opts.centerText);
+                    formData.append('font_choice', opts.fontChoice);
+                    formData.append('logo_scale', opts.logoScale);
+                    formData.append('font_scale', opts.fontScale);
+                    formData.append('gradient_height_ratio', opts.gradientHeightRatio);
+                    formData.append('gradient_max_opacity', opts.gradientMaxOpacity);
+                    formData.append('padding', opts.padding);
+                    if (opts.textOffsetY !== null) formData.append('text_offset_y', opts.textOffsetY);
+                    formData.append('output_format', opts.outputFormat);
+                    formData.append('quality', opts.quality);
 
-            const offsetVal = parseInt(textOffsetSlider.value, 10);
-            if (offsetVal !== 0) formData.append('text_offset_y', offsetVal);
+                    const response = await fetch('/api/process-batch', {
+                        method: 'POST',
+                        body: formData
+                    });
 
-            showToast("Generating ZIP on server...", "info");
+                    if (response.ok) {
+                        const zipBlob = await response.blob();
+                        triggerBlobDownload(zipBlob, 'ewurc_branded_photos.zip');
+                        showToast("ZIP download started!", "success");
+                        return;
+                    }
+                } catch (zErr) {
+                    console.warn("Server ZIP fallback:", zErr);
+                }
+            }
 
-            const response = await fetch('/api/process-batch', {
-                method: 'POST',
-                body: formData
-            });
-
-            if (!response.ok) throw new Error('ZIP generation failed');
-
-            const zipBlob = await response.blob();
-            triggerBlobDownload(zipBlob, 'ewurc_branded_photos.zip');
-            showToast("ZIP download started!", "success");
+            // Client-side sequential download for items
+            showToast(`Downloading ${completed.length} branded photos...`, "info");
+            for (let i = 0; i < completed.length; i++) {
+                const item = completed[i];
+                setTimeout(() => {
+                    triggerBlobDownload(item.brandedBlob, `branded_${item.file.name}`);
+                }, i * 350);
+            }
 
         } catch (err) {
-            console.error('ZIP error:', err);
-            showToast("Failed to create ZIP package", "error");
+            console.error('Download error:', err);
+            showToast("Failed to download photos", "error");
         } finally {
             btnDownloadZip.disabled = false;
             btnDownloadZip.innerHTML = originalText;

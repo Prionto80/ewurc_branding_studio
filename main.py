@@ -32,10 +32,15 @@ if STATIC_DIR.exists():
 @app.get("/")
 async def index():
     """Serves the main web studio frontend."""
-    index_path = TEMPLATES_DIR / "index.html"
-    if not index_path.exists():
-        raise HTTPException(status_code=404, detail="Template index.html not found")
-    return FileResponse(str(index_path))
+    candidates = [
+        TEMPLATES_DIR / "index.html",
+        Path("templates/index.html"),
+        BASE_DIR / "templates" / "index.html"
+    ]
+    for p in candidates:
+        if p.exists():
+            return FileResponse(str(p))
+    raise HTTPException(status_code=404, detail="Template index.html not found")
 
 
 @app.get("/api/info")
