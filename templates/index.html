@@ -6,6 +6,1184 @@
     <title>EWURC Photo Branding Studio</title>
     <link rel="icon" type="image/png" href="/static/ewurc.png">
     <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+/* EWURC Visual Branding Studio - Modern Stylesheet */
+
+@font-face {
+    font-family: 'Industry';
+    src: url('/static/fonts/industry.otf') format('opentype');
+    font-weight: bold;
+    font-style: normal;
+}
+
+:root {
+    --bg-main: #0B1120;
+    --bg-card: #131E36;
+    --bg-card-hover: #1A2744;
+    --bg-card-subtle: #0F172A;
+    --border-color: #24355A;
+    --border-focus: #3B82F6;
+    
+    --primary: #2563EB;
+    --primary-hover: #1D4ED8;
+    --primary-glow: rgba(37, 99, 235, 0.25);
+    
+    --accent: #F59E0B;
+    --accent-glow: rgba(245, 158, 11, 0.25);
+    
+    --success: #10B981;
+    --danger: #EF4444;
+    
+    --text-main: #F8FAFC;
+    --text-muted: #94A3B8;
+    --text-subtle: #64748B;
+    
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --font-brand: 'Industry', var(--font-sans);
+
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --radius-full: 9999px;
+    
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.5);
+    
+    --transition-fast: 0.15s ease;
+    --transition-norm: 0.25s ease;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--font-sans);
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    line-height: 1.5;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+}
+
+/* App Layout */
+.app-layout {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Header */
+.app-header {
+    background-color: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-color);
+    padding: 0.75rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-brand {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+.brand-logos {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 0.35rem 0.75rem;
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.brand-logo {
+    height: 38px;
+    width: auto;
+    object-fit: contain;
+}
+
+.logo-divider {
+    width: 1px;
+    height: 24px;
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.brand-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text-main);
+}
+
+.brand-title span {
+    color: var(--accent);
+}
+
+.brand-subtitle {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+/* Navigation Tabs */
+.nav-tabs {
+    display: flex;
+    gap: 0.5rem;
+    background: var(--bg-card-subtle);
+    padding: 0.35rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+}
+
+.nav-tab {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.nav-tab:hover {
+    color: var(--text-main);
+}
+
+.nav-tab.active {
+    background-color: var(--primary);
+    color: #fff;
+    box-shadow: 0 2px 8px var(--primary-glow);
+}
+
+.tab-icon {
+    width: 16px;
+    height: 16px;
+}
+
+/* Status indicator */
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    padding: 0.35rem 0.75rem;
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #34D399;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--success);
+    box-shadow: 0 0 8px var(--success);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.9); }
+}
+
+/* Main Workspace */
+.main-workspace {
+    flex: 1;
+    padding: 1.5rem 2rem;
+    max-width: 1700px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Studio Grid Layout */
+.studio-grid {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+/* Controls Panel */
+.control-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-md);
+    position: sticky;
+    top: 5rem;
+    max-height: calc(100vh - 6.5rem);
+    overflow-y: auto;
+}
+
+.control-panel::-webkit-scrollbar {
+    width: 6px;
+}
+.control-panel::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: var(--radius-full);
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.panel-header h2 {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.btn-text {
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    transition: opacity var(--transition-fast);
+}
+
+.btn-text:hover {
+    opacity: 0.8;
+}
+
+.btn-icon-sm {
+    width: 14px;
+    height: 14px;
+}
+
+/* Form Groups */
+.controls-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.15rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.label-row label, .form-group label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.param-tip {
+    font-size: 0.7rem;
+    color: var(--text-subtle);
+}
+
+.range-val {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--accent);
+    background: rgba(245, 158, 11, 0.1);
+    padding: 0.1rem 0.4rem;
+    border-radius: var(--radius-sm);
+}
+
+.text-input, .select-input {
+    width: 100%;
+    background: var(--bg-card-subtle);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-main);
+    padding: 0.55rem 0.75rem;
+    font-size: 0.8125rem;
+    font-family: inherit;
+    transition: border-color var(--transition-fast);
+}
+
+.text-input:focus, .select-input:focus {
+    outline: none;
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 2px var(--primary-glow);
+}
+
+.quick-chips {
+    display: flex;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+    margin-top: 0.25rem;
+}
+
+.chip {
+    background: var(--bg-card-subtle);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.chip:hover {
+    color: var(--text-main);
+    border-color: var(--text-subtle);
+}
+
+.chip.active {
+    background: rgba(37, 99, 235, 0.15);
+    border-color: var(--primary);
+    color: #60A5FA;
+}
+
+/* Range Sliders */
+.range-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: var(--radius-full);
+    background: var(--bg-card-subtle);
+    outline: none;
+    border: 1px solid var(--border-color);
+}
+
+.range-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    box-shadow: 0 0 6px var(--accent-glow);
+    transition: transform var(--transition-fast);
+}
+
+.range-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+}
+
+.range-hints {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.6875rem;
+    color: var(--text-subtle);
+}
+
+.form-row {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.form-group.half {
+    flex: 1;
+}
+
+/* Switch Toggle */
+.toggle-group {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding-top: 0.25rem;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 36px;
+    height: 20px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider.round {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: var(--border-color);
+    transition: var(--transition-fast);
+    border-radius: 34px;
+}
+
+.slider.round:before {
+    position: absolute;
+    content: "";
+    height: 14px;
+    width: 14px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: var(--transition-fast);
+    border-radius: 50%;
+}
+
+input:checked + .slider.round {
+    background-color: var(--primary);
+}
+
+input:checked + .slider.round:before {
+    transform: translateX(16px);
+}
+
+.toggle-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+/* Badges */
+.badge {
+    font-size: 0.7rem;
+    font-family: var(--font-mono);
+    padding: 0.15rem 0.45rem;
+    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-main);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.badge-accent {
+    background: rgba(245, 158, 11, 0.15);
+    color: var(--accent);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.badge-subtle {
+    color: var(--text-muted);
+}
+
+.badge-success {
+    background: rgba(16, 185, 129, 0.15);
+    color: #34D399;
+}
+
+/* Preview Area */
+.preview-area {
+    min-height: 600px;
+}
+
+/* Dropzone */
+.dropzone {
+    background: var(--bg-card);
+    border: 2px dashed var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 4rem 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all var(--transition-norm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 520px;
+}
+
+.dropzone:hover, .dropzone.dragover {
+    border-color: var(--primary);
+    background: var(--bg-card-hover);
+    box-shadow: 0 0 25px var(--primary-glow);
+}
+
+.file-input-hidden {
+    display: none;
+}
+
+.dropzone-content {
+    max-width: 500px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.upload-icon-circle {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: rgba(37, 99, 235, 0.1);
+    border: 1px solid rgba(37, 99, 235, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+}
+
+.upload-icon {
+    width: 32px;
+    height: 32px;
+}
+
+.dropzone-content h3 {
+    font-size: 1.15rem;
+    font-weight: 600;
+}
+
+.browse-link {
+    color: #60A5FA;
+    text-decoration: underline;
+}
+
+.dropzone-desc {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+}
+
+.dropzone-features {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 0.5rem;
+}
+
+.pill {
+    font-size: 0.725rem;
+    background: var(--bg-card-subtle);
+    border: 1px solid var(--border-color);
+    padding: 0.25rem 0.65rem;
+    border-radius: var(--radius-full);
+    color: var(--text-muted);
+}
+
+kbd {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    padding: 1px 4px;
+    font-size: 0.68rem;
+    color: var(--text-main);
+}
+
+/* Active Preview Container */
+.preview-container {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.viewer-toolbar {
+    padding: 0.75rem 1.25rem;
+    background: rgba(15, 23, 42, 0.6);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.file-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+.file-name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    max-width: 220px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.viewer-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.view-mode-toggle {
+    display: flex;
+    background: var(--bg-card-subtle);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 2px;
+}
+
+.btn-toggle {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.725rem;
+    font-weight: 500;
+    padding: 0.3rem 0.65rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.btn-toggle.active {
+    background: var(--primary);
+    color: #fff;
+}
+
+.btn-icon {
+    background: var(--bg-card-subtle);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.btn-icon svg {
+    width: 16px;
+    height: 16px;
+}
+
+.btn-icon:hover {
+    color: var(--text-main);
+    border-color: var(--text-subtle);
+}
+
+.btn-icon.text-danger:hover {
+    color: var(--danger);
+    border-color: var(--danger);
+}
+
+/* Comparison Display */
+.comparison-wrapper {
+    position: relative;
+    background: #030712;
+    min-height: 480px;
+    max-height: 75vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.split-comparison {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    user-select: none;
+}
+
+.split-layer {
+    position: relative;
+    max-width: 100%;
+    max-height: 75vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.split-layer img {
+    display: block;
+    max-width: 100%;
+    max-height: 75vh;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+}
+
+.branded-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    clip-path: polygon(0 0, 50% 0, 50% 100%, 0 100%);
+}
+
+.layer-badge {
+    position: absolute;
+    top: 1rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.2rem 0.6rem;
+    border-radius: var(--radius-sm);
+    z-index: 10;
+    pointer-events: none;
+}
+
+.badge-orig {
+    right: 1rem;
+    background: rgba(0, 0, 0, 0.7);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.badge-branded {
+    left: 1rem;
+    background: rgba(37, 99, 235, 0.85);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Slider Handle */
+.slider-handle {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 2px;
+    z-index: 20;
+    cursor: ew-resize;
+}
+
+.handle-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -1px;
+    width: 2px;
+    background: #fff;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
+}
+
+.handle-circle {
+    position: absolute;
+    top: 50%;
+    left: -16px;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #fff;
+    color: #1E293B;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.handle-circle svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* Side by Side Mode */
+.side-comparison {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    padding: 1rem;
+}
+
+.side-card {
+    background: var(--bg-card-subtle);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.side-card-header {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.side-card-img {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    min-height: 300px;
+}
+
+.side-card-img img {
+    max-width: 100%;
+    max-height: 50vh;
+    object-fit: contain;
+}
+
+/* Processing Spinner */
+.processing-spinner {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(11, 17, 32, 0.85);
+    backdrop-filter: blur(4px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    z-index: 50;
+}
+
+.spinner {
+    width: 44px;
+    height: 44px;
+    border: 3px solid rgba(245, 158, 11, 0.2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.processing-spinner p {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-main);
+}
+
+/* Bottom Bar */
+.viewer-bottom-bar {
+    padding: 1rem 1.25rem;
+    background: rgba(15, 23, 42, 0.7);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.branding-summary {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.dot-brand {
+    width: 8px;
+    height: 8px;
+    background-color: var(--accent);
+    border-radius: 50%;
+}
+
+.download-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+/* Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.25rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    border: none;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-primary {
+    background-color: var(--primary);
+    color: #fff;
+    box-shadow: 0 2px 10px var(--primary-glow);
+}
+
+.btn-primary:hover:not(:disabled) {
+    background-color: var(--primary-hover);
+    box-shadow: 0 4px 14px var(--primary-glow);
+}
+
+.btn-secondary {
+    background-color: var(--bg-card-subtle);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background-color: var(--bg-card-hover);
+    border-color: var(--text-subtle);
+}
+
+.btn-success {
+    background-color: var(--success);
+    color: #fff;
+}
+
+.btn-success:hover:not(:disabled) {
+    background-color: #059669;
+}
+
+/* TAB 2: Batch Processing Styles */
+.batch-workspace {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.batch-top-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.batch-headline h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.batch-headline p {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+}
+
+.batch-actions-panel {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.batch-dropzone {
+    background: var(--bg-card);
+    border: 2px dashed var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 3rem 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all var(--transition-norm);
+}
+
+.batch-dropzone:hover, .batch-dropzone.dragover {
+    border-color: var(--primary);
+    background: var(--bg-card-hover);
+}
+
+/* Batch Progress */
+.batch-progress-wrapper {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.progress-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8125rem;
+    font-weight: 500;
+}
+
+.progress-bar-bg {
+    width: 100%;
+    height: 8px;
+    background: var(--bg-card-subtle);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    transition: width 0.2s ease;
+}
+
+/* Batch Grid */
+.batch-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.25rem;
+}
+
+.batch-item-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform var(--transition-fast), border-color var(--transition-fast);
+}
+
+.batch-item-card:hover {
+    border-color: var(--primary);
+    transform: translateY(-2px);
+}
+
+.batch-item-thumb {
+    height: 160px;
+    background: #030712;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.batch-item-thumb img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: cover;
+}
+
+.batch-item-badge {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+}
+
+.batch-item-info {
+    padding: 0.85rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    flex: 1;
+}
+
+.batch-item-name {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.batch-item-meta {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    display: flex;
+    justify-content: space-between;
+}
+
+.batch-item-actions {
+    padding: 0.5rem 0.85rem 0.85rem;
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-card {
+    flex: 1;
+    padding: 0.4rem 0.5rem;
+    font-size: 0.75rem;
+}
+
+/* Toast Notifications */
+.toast-container {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    z-index: 1000;
+}
+
+.toast {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    padding: 0.75rem 1.25rem;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.8125rem;
+    animation: toastIn 0.25s ease-out;
+}
+
+.toast.toast-success {
+    border-color: rgba(16, 185, 129, 0.4);
+    background: #064E3B;
+}
+
+.toast.toast-error {
+    border-color: rgba(239, 68, 68, 0.4);
+    background: #7F1D1D;
+}
+
+@keyframes toastIn {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* Responsive */
+@media (max-width: 1080px) {
+    .studio-grid {
+        grid-template-columns: 1fr;
+    }
+    .control-panel {
+        position: static;
+        max-height: none;
+    }
+    .app-header {
+        padding: 0.75rem 1rem;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+}
+
+    </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -18,9 +1196,9 @@
         <header class="app-header">
             <div class="header-brand">
                 <div class="brand-logos">
-                    <img src="/static/ewu.png" alt="EWU Logo" class="brand-logo ewu-logo">
+                    <img src="/static/ewu.png" onerror="if(!this.dataset.tried){this.dataset.tried=1;this.src='/ewu.png';}" alt="EWU Logo" class="brand-logo ewu-logo">
                     <div class="logo-divider"></div>
-                    <img src="/static/ewurc.png" alt="EWURC Logo" class="brand-logo ewurc-logo">
+                    <img src="/static/ewurc.png" onerror="if(!this.dataset.tried){this.dataset.tried=1;this.src='/ewurc.png';}" alt="EWURC Logo" class="brand-logo ewurc-logo">
                 </div>
                 <div class="brand-info">
                     <h1 class="brand-title">EWURC <span>Branding Studio</span></h1>
@@ -498,5 +1676,1019 @@
     </div>
 
     <script src="/static/js/app.js"></script>
+    <script>
+/**
+ * EWURC Photo Branding Studio - Client Application
+ * Hybrid Architecture: Client-Side GPU Canvas + FastAPI Backend Fallback
+ */
+
+document.addEventListener('DOMContentLoaded', () => {
+    // State
+    const state = {
+        currentFile: null,
+        originalUrl: null,
+        brandedBlob: null,
+        brandedUrl: null,
+        isProcessing: false,
+        activeTab: 'single',
+        viewMode: 'split',
+        batchFiles: [], // [{ id, file, status, originalUrl, brandedBlob, brandedUrl }]
+        debounceTimer: null,
+        sliderActive: false
+    };
+
+    // Preload logos
+    const cachedLogoLeft = new Image();
+    cachedLogoLeft.src = '/static/ewu.png';
+
+    const cachedLogoRight = new Image();
+    cachedLogoRight.src = '/static/ewurc.png';
+
+    async function ensureLogosLoaded() {
+        const loadImg = (img, fallbackSrc) => new Promise((resolve) => {
+            if (img.complete && img.naturalWidth > 0) return resolve(img);
+            img.onload = () => resolve(img);
+            img.onerror = () => {
+                img.onload = () => resolve(img);
+                img.onerror = () => resolve(img);
+                img.src = fallbackSrc;
+            };
+        });
+        await Promise.all([
+            loadImg(cachedLogoLeft, '/ewu.png'),
+            loadImg(cachedLogoRight, '/ewurc.png')
+        ]);
+    }
+
+    // DOM Elements - Navigation & Tabs
+    const tabSingleBtn = document.getElementById('tab-single-btn');
+    const tabBatchBtn = document.getElementById('tab-batch-btn');
+    const tabSingleContent = document.getElementById('tab-single');
+    const tabBatchContent = document.getElementById('tab-batch');
+    const batchBadge = document.getElementById('batch-badge');
+
+    // DOM Elements - Single Studio
+    const singleDropzone = document.getElementById('single-dropzone');
+    const singleFileInput = document.getElementById('single-file-input');
+    const previewContainer = document.getElementById('preview-container');
+    const btnClearSingle = document.getElementById('btn-clear-single');
+    const brandingForm = document.getElementById('branding-form');
+    const btnResetDefaults = document.getElementById('btn-reset-defaults');
+    const autoPreviewToggle = document.getElementById('auto-preview-toggle');
+    const btnReprocess = document.getElementById('btn-reprocess');
+    const btnDownloadHd = document.getElementById('btn-download-hd');
+    
+    // Sliders & Inputs
+    const centerTextInput = document.getElementById('center-text-input');
+    const fontSelect = document.getElementById('font-select');
+    const logoScaleSlider = document.getElementById('logo-scale-slider');
+    const logoScaleVal = document.getElementById('logo-scale-val');
+    const fontScaleSlider = document.getElementById('font-scale-slider');
+    const fontScaleVal = document.getElementById('font-scale-val');
+    const gradientHeightSlider = document.getElementById('gradient-height-slider');
+    const gradientHeightVal = document.getElementById('gradient-height-val');
+    const gradientOpacitySlider = document.getElementById('gradient-opacity-slider');
+    const gradientOpacityVal = document.getElementById('gradient-opacity-val');
+    const paddingSlider = document.getElementById('padding-slider');
+    const paddingVal = document.getElementById('padding-val');
+    const textOffsetSlider = document.getElementById('text-offset-slider');
+    const textOffsetVal = document.getElementById('text-offset-val');
+    const outputFormatSelect = document.getElementById('output-format-select');
+    const qualitySelect = document.getElementById('quality-select');
+    const textChips = document.querySelectorAll('.chip[data-preset]');
+
+    // Preview Elements
+    const previewFilename = document.getElementById('preview-filename');
+    const previewResolution = document.getElementById('preview-resolution');
+    const previewFilesize = document.getElementById('preview-filesize');
+    const previewDuration = document.getElementById('preview-duration');
+    const splitComparisonBox = document.getElementById('split-comparison-box');
+    const sideComparisonBox = document.getElementById('side-comparison-box');
+    const brandedClipLayer = document.getElementById('branded-clip-layer');
+    const sliderHandle = document.getElementById('slider-handle');
+    const imgOriginal = document.getElementById('img-original');
+    const imgBranded = document.getElementById('img-branded');
+    const imgSideOriginal = document.getElementById('img-side-original');
+    const imgSideBranded = document.getElementById('img-side-branded');
+    const processingSpinner = document.getElementById('processing-spinner');
+    const spinnerText = document.getElementById('spinner-text');
+
+    // View Mode Buttons
+    const btnModeSplit = document.getElementById('btn-mode-split');
+    const btnModeSide = document.getElementById('btn-mode-side');
+    const btnModeBranded = document.getElementById('btn-mode-branded');
+    const btnFullscreen = document.getElementById('btn-fullscreen');
+
+    // Batch Elements
+    const batchDropzone = document.getElementById('batch-dropzone');
+    const batchFileInput = document.getElementById('batch-file-input');
+    const batchGrid = document.getElementById('batch-grid');
+    const btnStartBatch = document.getElementById('btn-start-batch');
+    const btnDownloadZip = document.getElementById('btn-download-zip');
+    const btnBatchClear = document.getElementById('btn-batch-clear');
+    const batchProgressBox = document.getElementById('batch-progress-box');
+    const batchProgressText = document.getElementById('batch-progress-text');
+    const batchProgressPercent = document.getElementById('batch-progress-percent');
+    const batchProgressFill = document.getElementById('batch-progress-fill');
+
+    // Toast Container
+    const toastContainer = document.getElementById('toast-container');
+
+    /* ========================================================================
+       Toast Notification Utility
+       ======================================================================== */
+    function showToast(message, type = 'info', duration = 3500) {
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.innerHTML = `<span>${message}</span>`;
+        toastContainer.appendChild(toast);
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(10px)';
+            toast.style.transition = 'all 0.25s ease';
+            setTimeout(() => toast.remove(), 250);
+        }, duration);
+    }
+
+    /* ========================================================================
+       Tab Navigation
+       ======================================================================== */
+    function switchTab(tabName) {
+        state.activeTab = tabName;
+        if (tabName === 'single') {
+            tabSingleBtn.classList.add('active');
+            tabBatchBtn.classList.remove('active');
+            tabSingleContent.classList.add('active');
+            tabBatchContent.classList.remove('active');
+        } else {
+            tabBatchBtn.classList.add('active');
+            tabSingleBtn.classList.remove('active');
+            tabBatchContent.classList.add('active');
+            tabSingleContent.classList.remove('active');
+        }
+    }
+
+    tabSingleBtn.addEventListener('click', () => switchTab('single'));
+    tabBatchBtn.addEventListener('click', () => switchTab('batch'));
+
+    /* ========================================================================
+       Slider Controls & Value Bindings
+       ======================================================================== */
+    function updateControlLabels() {
+        logoScaleVal.textContent = Math.round(logoScaleSlider.value * 100) + '%';
+        fontScaleVal.textContent = (fontScaleSlider.value * 100).toFixed(1) + '%';
+        gradientHeightVal.textContent = Math.round(gradientHeightSlider.value * 100) + '%';
+        gradientOpacityVal.textContent = gradientOpacitySlider.value;
+        paddingVal.textContent = paddingSlider.value + 'px';
+        
+        const offsetVal = parseInt(textOffsetSlider.value, 10);
+        textOffsetVal.textContent = offsetVal === 0 ? 'Auto' : (offsetVal > 0 ? `+${offsetVal}px` : `${offsetVal}px`);
+    }
+
+    function getCurrentOptions() {
+        const offsetVal = parseInt(textOffsetSlider.value, 10);
+        return {
+            centerText: centerTextInput.value,
+            fontChoice: fontSelect.value,
+            logoScale: parseFloat(logoScaleSlider.value),
+            fontScale: parseFloat(fontScaleSlider.value),
+            gradientHeightRatio: parseFloat(gradientHeightSlider.value),
+            gradientMaxOpacity: parseInt(gradientOpacitySlider.value, 10),
+            padding: parseInt(paddingSlider.value, 10),
+            textOffsetY: offsetVal === 0 ? null : offsetVal,
+            outputFormat: outputFormatSelect.value,
+            quality: parseInt(qualitySelect.value, 10)
+        };
+    }
+
+    // Attach slider event listeners
+    [logoScaleSlider, fontScaleSlider, gradientHeightSlider, gradientOpacitySlider, paddingSlider, textOffsetSlider].forEach(slider => {
+        slider.addEventListener('input', () => {
+            updateControlLabels();
+            triggerDebouncedProcessing();
+        });
+    });
+
+    centerTextInput.addEventListener('input', () => {
+        textChips.forEach(c => {
+            c.classList.toggle('active', c.getAttribute('data-preset') === centerTextInput.value.trim());
+        });
+        triggerDebouncedProcessing();
+    });
+
+    fontSelect.addEventListener('change', triggerDebouncedProcessing);
+    outputFormatSelect.addEventListener('change', triggerDebouncedProcessing);
+    qualitySelect.addEventListener('change', triggerDebouncedProcessing);
+
+    // Quick text presets chips
+    textChips.forEach(chip => {
+        chip.addEventListener('click', () => {
+            textChips.forEach(c => c.classList.remove('active'));
+            chip.classList.add('active');
+            centerTextInput.value = chip.getAttribute('data-preset');
+            triggerDebouncedProcessing();
+        });
+    });
+
+    // Reset Defaults
+    btnResetDefaults.addEventListener('click', () => {
+        centerTextInput.value = "East West University Robotics Club";
+        fontSelect.value = "industry";
+        logoScaleSlider.value = 0.11;
+        fontScaleSlider.value = 0.038;
+        gradientHeightSlider.value = 0.25;
+        gradientOpacitySlider.value = 185;
+        paddingSlider.value = 35;
+        textOffsetSlider.value = 0;
+        outputFormatSelect.value = "auto";
+        qualitySelect.value = "95";
+
+        textChips.forEach(c => {
+            c.classList.toggle('active', c.getAttribute('data-preset') === centerTextInput.value);
+        });
+
+        updateControlLabels();
+        showToast("Parameters reset to EWURC defaults", "info");
+        triggerDebouncedProcessing(true);
+    });
+
+    function triggerDebouncedProcessing(immediate = false) {
+        if (!state.currentFile) return;
+        if (!autoPreviewToggle.checked && !immediate) return;
+
+        clearTimeout(state.debounceTimer);
+        const delay = immediate ? 0 : 150;
+        state.debounceTimer = setTimeout(() => {
+            processSingleImage(false);
+        }, delay);
+    }
+
+    btnReprocess.addEventListener('click', () => {
+        if (state.currentFile) {
+            processSingleImage(false);
+        }
+    });
+
+    /* ========================================================================
+       High-Performance Client-Side Canvas Branding Engine
+       Bypasses Vercel 4.5 MB request payload limits completely
+       ======================================================================== */
+    async function brandWithCanvas(file, options, isFullRes = false) {
+        await ensureLogosLoaded();
+
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            const url = URL.createObjectURL(file);
+            img.onload = () => {
+                try {
+                    const origW = img.naturalWidth;
+                    const origH = img.naturalHeight;
+
+                    let canvasW = origW;
+                    let canvasH = origH;
+
+                    // For instant live preview, optimize dimension to max 1800px for speed
+                    if (!isFullRes && Math.max(origW, origH) > 1800) {
+                        const ratio = 1800 / Math.max(origW, origH);
+                        canvasW = Math.round(origW * ratio);
+                        canvasH = Math.round(origH * ratio);
+                    }
+
+                    const canvas = document.createElement('canvas');
+                    canvas.width = canvasW;
+                    canvas.height = canvasH;
+                    const ctx = canvas.getContext('2d');
+
+                    // 0. Base Image
+                    ctx.drawImage(img, 0, 0, canvasW, canvasH);
+
+                    // 1. Bottom Darkening Gradient
+                    const gradH = Math.max(Math.round(canvasH * options.gradientHeightRatio), 1);
+                    const gradY = canvasH - gradH;
+                    const grad = ctx.createLinearGradient(0, gradY, 0, canvasH);
+
+                    const alphaMax = options.gradientMaxOpacity / 255;
+                    grad.addColorStop(0, 'rgba(0, 0, 0, 0)');
+                    grad.addColorStop(0.3, `rgba(0, 0, 0, ${alphaMax * Math.pow(0.3, 1.5)})`);
+                    grad.addColorStop(0.6, `rgba(0, 0, 0, ${alphaMax * Math.pow(0.6, 1.5)})`);
+                    grad.addColorStop(0.85, `rgba(0, 0, 0, ${alphaMax * Math.pow(0.85, 1.5)})`);
+                    grad.addColorStop(1.0, `rgba(0, 0, 0, ${alphaMax})`);
+
+                    ctx.fillStyle = grad;
+                    ctx.fillRect(0, gradY, canvasW, gradH);
+
+                    // Padding
+                    const pad = Math.round(options.padding * (canvasW / origW));
+
+                    // 2. Left Logo (EWU)
+                    let targetLW = 0;
+                    let targetLH = 0;
+                    if (cachedLogoLeft.complete && cachedLogoLeft.naturalWidth > 0) {
+                        targetLW = Math.max(Math.round(canvasW * options.logoScale), 1);
+                        targetLH = Math.max(Math.round((targetLW / cachedLogoLeft.naturalWidth) * cachedLogoLeft.naturalHeight), 1);
+                        const logoLX = pad;
+                        const logoLY = canvasH - targetLH - pad;
+                        ctx.drawImage(cachedLogoLeft, logoLX, logoLY, targetLW, targetLH);
+                    }
+
+                    // 3. Right Logo (EWURC)
+                    let targetRW = 0;
+                    let targetRH = 0;
+                    if (cachedLogoRight.complete && cachedLogoRight.naturalWidth > 0) {
+                        targetRW = Math.max(Math.round(canvasW * options.logoScale), 1);
+                        targetRH = Math.max(Math.round((targetRW / cachedLogoRight.naturalWidth) * cachedLogoRight.naturalHeight), 1);
+                        const logoRX = canvasW - targetRW - pad;
+                        const logoRY = canvasH - targetRH - pad;
+                        ctx.drawImage(cachedLogoRight, logoRX, logoRY, targetRW, targetRH);
+                    }
+
+                    // 4. Center Text Overlay
+                    if (options.centerText && options.centerText.trim()) {
+                        const fontSize = Math.max(Math.round(canvasW * options.fontScale), 14);
+                        let fontFam = "'Industry', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+                        if (options.fontChoice === 'arial') fontFam = "Arial, sans-serif";
+                        else if (options.fontChoice === 'segoe') fontFam = "'Segoe UI', sans-serif";
+
+                        ctx.font = `bold ${fontSize}px ${fontFam}`;
+                        ctx.textBaseline = 'top';
+
+                        const textMetrics = ctx.measureText(options.centerText);
+                        const textW = textMetrics.width;
+                        const textH = fontSize * 0.75;
+
+                        const textX = Math.round((canvasW - textW) / 2);
+                        const maxLogoH = Math.max(targetLH, targetRH);
+
+                        let calcOffset = (options.textOffsetY === null || options.textOffsetY === 0)
+                            ? Math.round(50 * (canvasW / 6000))
+                            : Math.round(options.textOffsetY * (canvasW / origW));
+
+                        const textY = Math.round((canvasH - pad - (maxLogoH / 2)) - (textH / 2) + calcOffset);
+
+                        // Subtle shadow
+                        const shadowDist = Math.max(Math.round(fontSize * 0.015), 2);
+                        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                        ctx.fillText(options.centerText, textX + shadowDist, textY + shadowDist);
+
+                        // Crisp white
+                        ctx.fillStyle = '#FFFFFF';
+                        ctx.fillText(options.centerText, textX, textY);
+                    }
+
+                    URL.revokeObjectURL(url);
+
+                    let mimeType = 'image/jpeg';
+                    if (options.outputFormat === 'png') mimeType = 'image/png';
+                    else if (options.outputFormat === 'webp') mimeType = 'image/webp';
+
+                    canvas.toBlob((blob) => {
+                        if (blob) {
+                            resolve({
+                                blob,
+                                width: canvasW,
+                                height: canvasH,
+                                origWidth: origW,
+                                origHeight: origH
+                            });
+                        } else {
+                            reject(new Error("Canvas blob export failed"));
+                        }
+                    }, mimeType, options.quality / 100);
+
+                } catch (err) {
+                    URL.revokeObjectURL(url);
+                    reject(err);
+                }
+            };
+
+            img.onerror = () => {
+                URL.revokeObjectURL(url);
+                reject(new Error("Failed to load image for canvas branding"));
+            };
+
+            img.src = url;
+        });
+    }
+
+    /* ========================================================================
+       Single Image Upload & Handling
+       ======================================================================== */
+    singleDropzone.addEventListener('click', () => singleFileInput.click());
+
+    singleFileInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+            loadSingleFile(e.target.files[0]);
+        }
+    });
+
+    // Drag and Drop
+    ['dragenter', 'dragover'].forEach(name => {
+        singleDropzone.addEventListener(name, (e) => {
+            e.preventDefault();
+            singleDropzone.classList.add('dragover');
+        });
+    });
+
+    ['dragleave', 'drop'].forEach(name => {
+        singleDropzone.addEventListener(name, (e) => {
+            e.preventDefault();
+            singleDropzone.classList.remove('dragover');
+        });
+    });
+
+    singleDropzone.addEventListener('drop', (e) => {
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+            loadSingleFile(e.dataTransfer.files[0]);
+        }
+    });
+
+    // Global Clipboard Paste Support
+    document.addEventListener('paste', (e) => {
+        if (state.activeTab !== 'single') return;
+        const items = e.clipboardData?.items;
+        if (!items) return;
+        for (let item of items) {
+            if (item.type.indexOf('image') !== -1) {
+                const blob = item.getAsFile();
+                if (blob) {
+                    showToast("Pasted image from clipboard!", "info");
+                    loadSingleFile(blob);
+                    break;
+                }
+            }
+        }
+    });
+
+    function loadSingleFile(file) {
+        if (!file.type.startsWith('image/')) {
+            showToast("Please select a valid image file (JPG, PNG, WebP).", "error");
+            return;
+        }
+
+        state.currentFile = file;
+        previewFilename.textContent = file.name || "pasted_image.png";
+        previewFilesize.textContent = formatBytes(file.size);
+
+        if (state.originalUrl) {
+            URL.revokeObjectURL(state.originalUrl);
+        }
+        state.originalUrl = URL.createObjectURL(file);
+        
+        // Measure dimensions
+        const testImg = new Image();
+        testImg.onload = () => {
+            previewResolution.textContent = `${testImg.naturalWidth} \u00D7 ${testImg.naturalHeight}`;
+        };
+        testImg.src = state.originalUrl;
+
+        imgOriginal.src = state.originalUrl;
+        imgSideOriginal.src = state.originalUrl;
+
+        singleDropzone.style.display = 'none';
+        previewContainer.style.display = 'flex';
+
+        // Auto process immediately
+        processSingleImage(false);
+    }
+
+    btnClearSingle.addEventListener('click', () => {
+        state.currentFile = null;
+        if (state.originalUrl) URL.revokeObjectURL(state.originalUrl);
+        if (state.brandedUrl) URL.revokeObjectURL(state.brandedUrl);
+        state.originalUrl = null;
+        state.brandedUrl = null;
+        state.brandedBlob = null;
+
+        imgOriginal.src = '';
+        imgBranded.src = '';
+        imgSideOriginal.src = '';
+        imgSideBranded.src = '';
+        singleFileInput.value = '';
+
+        previewContainer.style.display = 'none';
+        singleDropzone.style.display = 'flex';
+    });
+
+    /* ========================================================================
+       Resilient Dual-Mode Image Processing Engine
+       Uses Client-Side Canvas for instant 0ms preview & handles > 4.5 MB Vercel limit
+       ======================================================================== */
+    async function processSingleImage(forDownload = false) {
+        if (!state.currentFile || state.isProcessing) return;
+
+        state.isProcessing = true;
+        processingSpinner.style.display = 'flex';
+        spinnerText.textContent = forDownload ? 'Rendering Full HD Branded Photo...' : 'Applying EWURC Branding...';
+        const startTime = performance.now();
+        const options = getCurrentOptions();
+
+        try {
+            const isLargeFile = state.currentFile.size > 4.0 * 1024 * 1024; // > 4MB (Vercel payload limit is 4.5MB)
+
+            // Live Preview: ALWAYS use client-side canvas for instant 20ms rendering with 0 network latency
+            if (!forDownload) {
+                const result = await brandWithCanvas(state.currentFile, options, false);
+                const elapsed = ((performance.now() - startTime) / 1000).toFixed(2);
+                previewDuration.textContent = `${elapsed}s`;
+
+                if (state.brandedUrl) URL.revokeObjectURL(state.brandedUrl);
+                state.brandedBlob = result.blob;
+                state.brandedUrl = URL.createObjectURL(result.blob);
+
+                imgBranded.src = state.brandedUrl;
+                imgSideBranded.src = state.brandedUrl;
+                previewResolution.textContent = `${result.origWidth} \u00D7 ${result.origHeight}`;
+                return;
+            }
+
+            // For Download: If file is large (> 4MB) or if backend returns error, use full-res canvas
+            if (isLargeFile) {
+                // Directly render in full original resolution (even 6000x4000) on client
+                const fullRes = await brandWithCanvas(state.currentFile, options, true);
+                triggerBlobDownload(fullRes.blob, getExportFilename());
+                showToast("Full-resolution branded photo downloaded!", "success");
+                return;
+            }
+
+            // If file <= 4MB, attempt server process first, fallback to canvas on error
+            try {
+                const formData = new FormData();
+                formData.append('file', state.currentFile);
+                formData.append('center_text', options.centerText);
+                formData.append('font_choice', options.fontChoice);
+                formData.append('logo_scale', options.logoScale);
+                formData.append('font_scale', options.fontScale);
+                formData.append('gradient_height_ratio', options.gradientHeightRatio);
+                formData.append('gradient_max_opacity', options.gradientMaxOpacity);
+                formData.append('padding', options.padding);
+                if (options.textOffsetY !== null) formData.append('text_offset_y', options.textOffsetY);
+                formData.append('output_format', options.outputFormat);
+                formData.append('quality', options.quality);
+
+                const response = await fetch('/api/process', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    triggerBlobDownload(blob, getExportFilename());
+                    showToast("Download started!", "success");
+                    return;
+                }
+            } catch (netErr) {
+                console.warn("Server unavailable or blocked, falling back to client canvas engine:", netErr);
+            }
+
+            // Fallback: Full-resolution client-side canvas branding
+            const fullRes = await brandWithCanvas(state.currentFile, options, true);
+            triggerBlobDownload(fullRes.blob, getExportFilename());
+            showToast("Full-resolution photo branded & downloaded!", "success");
+
+        } catch (err) {
+            console.error('Error during processing:', err);
+            showToast(err.message || 'Error branding image', 'error');
+        } finally {
+            state.isProcessing = false;
+            processingSpinner.style.display = 'none';
+        }
+    }
+
+    function getExportFilename() {
+        const origName = state.currentFile?.name || 'photo.jpg';
+        const dotIdx = origName.lastIndexOf('.');
+        const baseName = dotIdx !== -1 ? origName.substring(0, dotIdx) : origName;
+        let ext = dotIdx !== -1 ? origName.substring(dotIdx) : '.jpg';
+
+        if (outputFormatSelect.value === 'jpeg') ext = '.jpg';
+        else if (outputFormatSelect.value === 'png') ext = '.png';
+        else if (outputFormatSelect.value === 'webp') ext = '.webp';
+
+        return `branded_${baseName}${ext}`;
+    }
+
+    function triggerBlobDownload(blob, filename) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    btnDownloadHd.addEventListener('click', async () => {
+        if (!state.currentFile) return;
+        await processSingleImage(true);
+    });
+
+    /* ========================================================================
+       Split Comparison Interactive Slider
+       ======================================================================== */
+    function setSplitPosition(percent) {
+        percent = Math.max(0, Math.min(100, percent));
+        sliderHandle.style.left = `${percent}%`;
+        brandedClipLayer.style.clipPath = `polygon(0 0, ${percent}% 0, ${percent}% 100%, 0 100%)`;
+    }
+
+    function handleSliderMove(e) {
+        if (!state.sliderActive) return;
+        const rect = splitComparisonBox.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const offsetX = clientX - rect.left;
+        const percent = (offsetX / rect.width) * 100;
+        setSplitPosition(percent);
+    }
+
+    sliderHandle.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        state.sliderActive = true;
+    });
+
+    splitComparisonBox.addEventListener('mousedown', (e) => {
+        state.sliderActive = true;
+        handleSliderMove(e);
+    });
+
+    window.addEventListener('mousemove', handleSliderMove);
+    window.addEventListener('mouseup', () => {
+        state.sliderActive = false;
+    });
+
+    // Touch support for mobile / tablets
+    sliderHandle.addEventListener('touchstart', () => {
+        state.sliderActive = true;
+    }, { passive: true });
+
+    window.addEventListener('touchmove', handleSliderMove, { passive: true });
+    window.addEventListener('touchend', () => {
+        state.sliderActive = false;
+    });
+
+    // View Modes
+    btnModeSplit.addEventListener('click', () => {
+        state.viewMode = 'split';
+        btnModeSplit.classList.add('active');
+        btnModeSide.classList.remove('active');
+        btnModeBranded.classList.remove('active');
+
+        splitComparisonBox.style.display = 'flex';
+        sideComparisonBox.style.display = 'none';
+        sliderHandle.style.display = 'block';
+        setSplitPosition(50);
+    });
+
+    btnModeSide.addEventListener('click', () => {
+        state.viewMode = 'side';
+        btnModeSide.classList.add('active');
+        btnModeSplit.classList.remove('active');
+        btnModeBranded.classList.remove('active');
+
+        splitComparisonBox.style.display = 'none';
+        sideComparisonBox.style.display = 'grid';
+    });
+
+    btnModeBranded.addEventListener('click', () => {
+        state.viewMode = 'branded';
+        btnModeBranded.classList.add('active');
+        btnModeSplit.classList.remove('active');
+        btnModeSide.classList.remove('active');
+
+        splitComparisonBox.style.display = 'flex';
+        sideComparisonBox.style.display = 'none';
+        sliderHandle.style.display = 'none';
+        setSplitPosition(100);
+    });
+
+    // Fullscreen View
+    btnFullscreen.addEventListener('click', () => {
+        const compElem = document.getElementById('comparison-wrapper');
+        if (!document.fullscreenElement) {
+            compElem.requestFullscreen?.() || compElem.webkitRequestFullscreen?.();
+        } else {
+            document.exitFullscreen?.() || document.webkitExitFullscreen?.();
+        }
+    });
+
+    /* ========================================================================
+       TAB 2: Batch Processing
+       ======================================================================== */
+    batchDropzone.addEventListener('click', () => batchFileInput.click());
+
+    batchFileInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files.length) {
+            addBatchFiles(Array.from(e.target.files));
+        }
+    });
+
+    // Drag & Drop for batch
+    ['dragenter', 'dragover'].forEach(name => {
+        batchDropzone.addEventListener(name, (e) => {
+            e.preventDefault();
+            batchDropzone.classList.add('dragover');
+        });
+    });
+
+    ['dragleave', 'drop'].forEach(name => {
+        batchDropzone.addEventListener(name, (e) => {
+            e.preventDefault();
+            batchDropzone.classList.remove('dragover');
+        });
+    });
+
+    batchDropzone.addEventListener('drop', (e) => {
+        if (e.dataTransfer && e.dataTransfer.files) {
+            addBatchFiles(Array.from(e.dataTransfer.files));
+        }
+    });
+
+    function addBatchFiles(files) {
+        const imageFiles = files.filter(f => f.type.startsWith('image/'));
+        if (imageFiles.length === 0) {
+            showToast("No valid image files found.", "error");
+            return;
+        }
+
+        imageFiles.forEach(file => {
+            const id = 'batch_' + Math.random().toString(36).substring(2, 9);
+            const originalUrl = URL.createObjectURL(file);
+            state.batchFiles.push({
+                id,
+                file,
+                status: 'ready',
+                originalUrl,
+                brandedBlob: null,
+                brandedUrl: null
+            });
+        });
+
+        renderBatchGrid();
+        updateBatchControls();
+        showToast(`Added ${imageFiles.length} photos to batch queue`, "info");
+    }
+
+    function updateBatchControls() {
+        const count = state.batchFiles.length;
+        batchBadge.textContent = count;
+        batchBadge.style.display = count > 0 ? 'inline-block' : 'none';
+
+        btnStartBatch.disabled = count === 0;
+        btnBatchClear.disabled = count === 0;
+
+        const hasCompleted = state.batchFiles.some(f => f.status === 'done');
+        btnDownloadZip.disabled = !hasCompleted;
+    }
+
+    function renderBatchGrid() {
+        batchGrid.innerHTML = '';
+        state.batchFiles.forEach((item, index) => {
+            const card = document.createElement('div');
+            card.className = 'batch-item-card';
+            card.id = `card_${item.id}`;
+
+            let badgeHtml = '';
+            if (item.status === 'ready') {
+                badgeHtml = '<span class="badge badge-subtle">Ready</span>';
+            } else if (item.status === 'processing') {
+                badgeHtml = '<span class="badge badge-accent">Processing...</span>';
+            } else if (item.status === 'done') {
+                badgeHtml = '<span class="badge badge-success">Branded</span>';
+            } else if (item.status === 'error') {
+                badgeHtml = '<span class="badge" style="background:#7F1D1D;color:#FECACA;">Error</span>';
+            }
+
+            const displayUrl = item.brandedUrl || item.originalUrl;
+
+            card.innerHTML = `
+                <div class="batch-item-thumb">
+                    <img src="${displayUrl}" alt="${item.file.name}" loading="lazy">
+                    <div class="batch-item-badge">${badgeHtml}</div>
+                </div>
+                <div class="batch-item-info">
+                    <div class="batch-item-name" title="${item.file.name}">${item.file.name}</div>
+                    <div class="batch-item-meta">
+                        <span>${formatBytes(item.file.size)}</span>
+                        <span>#${index + 1}</span>
+                    </div>
+                </div>
+                <div class="batch-item-actions">
+                    <button type="button" class="btn btn-secondary btn-card btn-remove-item" data-id="${item.id}">Remove</button>
+                    ${item.status === 'done' ? `
+                        <button type="button" class="btn btn-primary btn-card btn-dl-item" data-id="${item.id}">Download</button>
+                    ` : ''}
+                </div>
+            `;
+
+            batchGrid.appendChild(card);
+        });
+
+        // Event listeners for individual items
+        document.querySelectorAll('.btn-remove-item').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = e.target.getAttribute('data-id');
+                removeBatchItem(id);
+            });
+        });
+
+        document.querySelectorAll('.btn-dl-item').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = e.target.getAttribute('data-id');
+                const item = state.batchFiles.find(f => f.id === id);
+                if (item && item.brandedBlob) {
+                    triggerBlobDownload(item.brandedBlob, `branded_${item.file.name}`);
+                }
+            });
+        });
+    }
+
+    function removeBatchItem(id) {
+        const idx = state.batchFiles.findIndex(f => f.id === id);
+        if (idx !== -1) {
+            const item = state.batchFiles[idx];
+            if (item.originalUrl) URL.revokeObjectURL(item.originalUrl);
+            if (item.brandedUrl) URL.revokeObjectURL(item.brandedUrl);
+            state.batchFiles.splice(idx, 1);
+            renderBatchGrid();
+            updateBatchControls();
+        }
+    }
+
+    btnBatchClear.addEventListener('click', () => {
+        state.batchFiles.forEach(item => {
+            if (item.originalUrl) URL.revokeObjectURL(item.originalUrl);
+            if (item.brandedUrl) URL.revokeObjectURL(item.brandedUrl);
+        });
+        state.batchFiles = [];
+        renderBatchGrid();
+        updateBatchControls();
+        batchProgressBox.style.display = 'none';
+        showToast("Batch queue cleared", "info");
+    });
+
+    // Process Batch (Hybrid server or client-side canvas)
+    btnStartBatch.addEventListener('click', async () => {
+        const total = state.batchFiles.length;
+        if (total === 0) return;
+
+        btnStartBatch.disabled = true;
+        btnBatchClear.disabled = true;
+        batchProgressBox.style.display = 'flex';
+
+        let processedCount = 0;
+        const options = getCurrentOptions();
+
+        for (let i = 0; i < total; i++) {
+            const item = state.batchFiles[i];
+            item.status = 'processing';
+            renderBatchGrid();
+
+            batchProgressText.textContent = `Processing ${i + 1} of ${total}: ${item.file.name}`;
+            const pct = Math.round(((i) / total) * 100);
+            batchProgressPercent.textContent = `${pct}%`;
+            batchProgressFill.style.width = `${pct}%`;
+
+            try {
+                // If file > 4MB or server unavailable, brand with client canvas
+                if (item.file.size > 4.0 * 1024 * 1024) {
+                    const res = await brandWithCanvas(item.file, options, true);
+                    item.brandedBlob = res.blob;
+                    item.brandedUrl = URL.createObjectURL(res.blob);
+                    item.status = 'done';
+                    processedCount++;
+                } else {
+                    try {
+                        const formData = new FormData();
+                        formData.append('file', item.file);
+                        formData.append('center_text', options.centerText);
+                        formData.append('font_choice', options.fontChoice);
+                        formData.append('logo_scale', options.logoScale);
+                        formData.append('font_scale', options.fontScale);
+                        formData.append('gradient_height_ratio', options.gradientHeightRatio);
+                        formData.append('gradient_max_opacity', options.gradientMaxOpacity);
+                        formData.append('padding', options.padding);
+                        if (options.textOffsetY !== null) formData.append('text_offset_y', options.textOffsetY);
+                        formData.append('output_format', options.outputFormat);
+                        formData.append('quality', options.quality);
+
+                        const response = await fetch('/api/process', {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        if (!response.ok) throw new Error("Server error");
+
+                        const blob = await response.blob();
+                        item.brandedBlob = blob;
+                        item.brandedUrl = URL.createObjectURL(blob);
+                        item.status = 'done';
+                        processedCount++;
+                    } catch (serverErr) {
+                        // Canvas fallback for batch item
+                        const res = await brandWithCanvas(item.file, options, true);
+                        item.brandedBlob = res.blob;
+                        item.brandedUrl = URL.createObjectURL(res.blob);
+                        item.status = 'done';
+                        processedCount++;
+                    }
+                }
+            } catch (err) {
+                console.error('Batch item error:', err);
+                item.status = 'error';
+            }
+
+            renderBatchGrid();
+        }
+
+        // Complete
+        batchProgressText.textContent = `Completed! ${processedCount} of ${total} images branded successfully.`;
+        batchProgressPercent.textContent = `100%`;
+        batchProgressFill.style.width = `100%`;
+
+        btnStartBatch.disabled = false;
+        btnBatchClear.disabled = false;
+        updateBatchControls();
+        showToast(`Batch completed: ${processedCount} photos ready!`, "success");
+    });
+
+    // Download All as ZIP (Server Endpoint or multi-download)
+    btnDownloadZip.addEventListener('click', async () => {
+        const completed = state.batchFiles.filter(f => f.status === 'done' && f.brandedBlob);
+        if (completed.length === 0) return;
+
+        btnDownloadZip.disabled = true;
+        const originalText = btnDownloadZip.innerHTML;
+        btnDownloadZip.innerHTML = '<span>Packaging Photos...</span>';
+
+        try {
+            // If all files under 4MB, try server ZIP
+            const totalBytes = completed.reduce((sum, item) => sum + item.file.size, 0);
+            if (totalBytes < 4.0 * 1024 * 1024) {
+                try {
+                    const formData = new FormData();
+                    completed.forEach(item => formData.append('files', item.file));
+                    const opts = getCurrentOptions();
+                    formData.append('center_text', opts.centerText);
+                    formData.append('font_choice', opts.fontChoice);
+                    formData.append('logo_scale', opts.logoScale);
+                    formData.append('font_scale', opts.fontScale);
+                    formData.append('gradient_height_ratio', opts.gradientHeightRatio);
+                    formData.append('gradient_max_opacity', opts.gradientMaxOpacity);
+                    formData.append('padding', opts.padding);
+                    if (opts.textOffsetY !== null) formData.append('text_offset_y', opts.textOffsetY);
+                    formData.append('output_format', opts.outputFormat);
+                    formData.append('quality', opts.quality);
+
+                    const response = await fetch('/api/process-batch', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (response.ok) {
+                        const zipBlob = await response.blob();
+                        triggerBlobDownload(zipBlob, 'ewurc_branded_photos.zip');
+                        showToast("ZIP download started!", "success");
+                        return;
+                    }
+                } catch (zErr) {
+                    console.warn("Server ZIP fallback:", zErr);
+                }
+            }
+
+            // Client-side sequential download for items
+            showToast(`Downloading ${completed.length} branded photos...`, "info");
+            for (let i = 0; i < completed.length; i++) {
+                const item = completed[i];
+                setTimeout(() => {
+                    triggerBlobDownload(item.brandedBlob, `branded_${item.file.name}`);
+                }, i * 350);
+            }
+
+        } catch (err) {
+            console.error('Download error:', err);
+            showToast("Failed to download photos", "error");
+        } finally {
+            btnDownloadZip.disabled = false;
+            btnDownloadZip.innerHTML = originalText;
+        }
+    });
+
+    /* ========================================================================
+       Utilities
+       ======================================================================== */
+    function formatBytes(bytes, decimals = 1) {
+        if (bytes === 0) return '0 B';
+        const k = 1024;
+        const dm = decimals < 0 ? 0 : decimals;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+    }
+
+    // Initialize labels
+    updateControlLabels();
+});
+
+    </script>
 </body>
 </html>

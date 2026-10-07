@@ -24,9 +24,52 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Mount static assets
-if STATIC_DIR.exists():
-    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+# Direct static asset routes to ensure reliable delivery on serverless platforms
+@app.get("/ewu.png")
+@app.get("/static/ewu.png")
+async def get_ewu_logo():
+    candidates = [BASE_DIR / "ewu.png", STATIC_DIR / "ewu.png", Path("ewu.png"), Path("static/ewu.png")]
+    for p in candidates:
+        if p.exists():
+            return FileResponse(str(p), media_type="image/png")
+    raise HTTPException(status_code=404, detail="ewu.png not found")
+
+
+@app.get("/ewurc.png")
+@app.get("/static/ewurc.png")
+async def get_ewurc_logo():
+    candidates = [BASE_DIR / "ewurc.png", STATIC_DIR / "ewurc.png", Path("ewurc.png"), Path("static/ewurc.png")]
+    for p in candidates:
+        if p.exists():
+            return FileResponse(str(p), media_type="image/png")
+    raise HTTPException(status_code=404, detail="ewurc.png not found")
+
+
+@app.get("/static/{file_path:path}")
+async def serve_static_file(file_path: str):
+    candidates = [
+        STATIC_DIR / file_path,
+        BASE_DIR / "static" / file_path,
+        Path("static") / file_path,
+        BASE_DIR / file_path,
+        Path(file_path)
+    ]
+    for c in candidates:
+        if c.exists() and c.is_file():
+            ext = c.suffix.lower()
+            media_type = None
+            if ext == ".css":
+                media_type = "text/css"
+            elif ext == ".js":
+                media_type = "application/javascript"
+            elif ext == ".png":
+                media_type = "image/png"
+            elif ext in {".jpg", ".jpeg"}:
+                media_type = "image/jpeg"
+            elif ext == ".otf":
+                media_type = "font/otf"
+            return FileResponse(str(c), media_type=media_type)
+    raise HTTPException(status_code=404, detail=f"File {file_path} not found")
 
 
 @app.get("/")
