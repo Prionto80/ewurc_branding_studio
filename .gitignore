@@ -1,0 +1,22 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# Large zip archives and Google Drive downloads
+*.zip
+drive-download*
+images/
+output_images/
+test_*.jpg
+test_*.png
+.DS_Store
+Thumbs.db

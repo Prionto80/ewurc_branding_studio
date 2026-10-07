@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EWURC Photo Branding Studio</title>
+    <link rel="icon" type="image/png" href="/static/ewurc.png">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body class="dark-theme">
+    <!-- Main App Container -->
+    <div class="app-layout">
+        
+        <!-- Header / Navigation Bar -->
+        <header class="app-header">
+            <div class="header-brand">
+                <div class="brand-logos">
+                    <img src="/static/ewu.png" alt="EWU Logo" class="brand-logo ewu-logo">
+                    <div class="logo-divider"></div>
+                    <img src="/static/ewurc.png" alt="EWURC Logo" class="brand-logo ewurc-logo">
+                </div>
+                <div class="brand-info">
+                    <h1 class="brand-title">EWURC <span>Branding Studio</span></h1>
+                    <p class="brand-subtitle">East West University Robotics Club &bull; Media Automation</p>
+                </div>
+            </div>
+
+            <!-- Navigation Tabs -->
+            <nav class="nav-tabs">
+                <button class="nav-tab active" data-tab="single" id="tab-single-btn">
+                    <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <polyline points="21 15 16 10 5 21"/>
+                    </svg>
+                    Single Photo Studio
+                </button>
+                <button class="nav-tab" data-tab="batch" id="tab-batch-btn">
+                    <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                        <polyline points="10 9 9 9 8 9"/>
+                    </svg>
+                    Batch Processing
+                    <span class="badge batch-count-badge" id="batch-badge" style="display: none;">0</span>
+                </button>
+            </nav>
+
+        </header>
+
+        <!-- Main Workspace -->
+        <main class="main-workspace">
+
+            <!-- TAB 1: Single Photo Studio -->
+            <section class="tab-content active" id="tab-single">
+                <div class="studio-grid">
+                    
+                    <!-- Left: Control Settings Panel -->
+                    <aside class="control-panel">
+                        <div class="panel-header">
+                            <h2>Branding Configuration</h2>
+                            <button type="button" class="btn-text" id="btn-reset-defaults" title="Reset all sliders to original main.py parameters">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon-sm">
+                                    <polyline points="1 4 1 10 7 10"/>
+                                    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+                                </svg>
+                                Reset Defaults
+                            </button>
+                        </div>
+
+                        <form id="branding-form" class="controls-form">
+                            <!-- Overlay Text -->
+                            <div class="form-group">
+                                <div class="label-row">
+                                    <label for="center-text-input">Center Text Overlay</label>
+                                    <span class="param-tip">Original main.py Default</span>
+                                </div>
+                                <input 
+                                    type="text" 
+                                    id="center-text-input" 
+                                    name="center_text" 
+                                    value="East West University Robotics Club" 
+                                    class="text-input"
+                                    placeholder="Enter club or event name..."
+                                />
+                                <div class="quick-chips">
+                                    <button type="button" class="chip active" data-preset="East West University Robotics Club">EWURC Official</button>
+                                    <button type="button" class="chip" data-preset="EWU Robotics Club">Short</button>
+                                    <button type="button" class="chip" data-preset="East West University">EWU Only</button>
+                                </div>
+                            </div>
+
+                            <!-- Font Selection -->
+                            <div class="form-group">
+                                <div class="label-row">
+                                    <label for="font-select">Typography Font</label>
+                                    <span class="badge badge-accent">industry.otf</span>
+                                </div>
+                                <select id="font-select" name="font_choice" class="select-input">
+                                    <option value="industry" selected>Industry Bold (Project Brand Font)</option>
+                                    <option value="arial">Arial Bold (Windows Fallback)</option>
+                                    <option value="segoe">Segoe UI SemiBold</option>
+                                </select>
+                            </div>
+
+                            <!-- Logo Scale -->
+                            <div class="form-group">
+                                <div class="label-row">
+                                    <label for="logo-scale-slider">Logo Scale</label>
+                                    <span class="range-val" id="logo-scale-val">11%</span>
+                                </div>
+                                <input 
+                                    type="range" 
+                                    id="logo-scale-slider" 
+                                    name="logo_scale" 
+                                    min="0.05" 
+                                    max="0.25" 
+                                    step="0.005" 
+                                    value="0.11" 
+                                    class="range-slider"
+                                />
+                                <div class="range-hints">
+                                    <span>5% (Small)</span>
+                                    <span>11% (Default)</span>
+                                    <span>25% (Large)</span>
+                                </div>
+                            </div>
+
+                            <!-- Font Scale -->
+                            <div class="form-group">
+                                <div class="label-row">
+                                    <label for="font-scale-slider">Font Size Scale</label>
+                                    <span class="range-val" id="font-scale-val">3.8%</span>
+                                </div>
+                                <input 
+                                    type="range" 
+                                    id="font-scale-slider" 
+                                    name="font_scale" 
+                                    min="0.015" 
+                                    max="0.08" 
+                                    step="0.001" 
+                                    value="0.038" 
+                                    class="range-slider"
+                                />
+                                <div class="range-hints">
+                                    <span>1.5%</span>
+                                    <span>3.8% (Default)</span>
+                                    <span>8.0%</span>
+                                </div>
+                            </div>
+
+                            <!-- Gradient Height Ratio -->
+                            <div class="form-group">
+                                <div class="label-row">
+                                    <label for="gradient-height-slider">Gradient Height</label>
+                                    <span class="range-val" id="gradient-height-val">25%</span>
+                                </div>
+                                <input 
+                                    type="range" 
+                                    id="gradient-height-slider" 
+                                    name="gradient_height_ratio" 
+                                    min="0.10" 
+                                    max="0.45" 
+                                    step="0.01" 
+                                    value="0.25" 
+                                    class="range-slider"
+                                />
+                                <div class="range-hints">
+                                    <span>10%</span>
+                                    <span>25% (Default)</span>
+                                    <span>45%</span>
+                                </div>
+                            </div>
+
+                            <!-- Gradient Darkness -->
+                            <div class="form-group">
+                                <div class="label-row">
+                                    <label for="gradient-opacity-slider">Gradient Darkness</label>
+                                    <span class="range-val" id="gradient-opacity-val">185</span>
+                                </div>
+                                <input 
+                                    type="range" 
+                                    id="gradient-opacity-slider" 
+                                    name="gradient_max_opacity" 
+                                    min="50" 
+                                    max="255" 
+                                    step="5" 
+                                    value="185" 
+                                    class="range-slider"
+                                />
+                                <div class="range-hints">
+                                    <span>50 (Subtle)</span>
+                                    <span>185 (Default)</span>
+                                    <span>255 (Solid)</span>
+                                </div>
+                            </div>
+
+                            <!-- Padding -->
+                            <div class="form-group">
+                                <div class="label-row">
+                                    <label for="padding-slider">Edge Padding</label>
+                                    <span class="range-val" id="padding-val">35px</span>
+                                </div>
+                                <input 
+                                    type="range" 
+                                    id="padding-slider" 
+                                    name="padding" 
+                                    min="0" 
+                                    max="120" 
+                                    step="1" 
+                                    value="35" 
+                                    class="range-slider"
+                                />
+                                <div class="range-hints">
+                                    <span>0px</span>
+                                    <span>35px (Default)</span>
+                                    <span>120px</span>
+                                </div>
+                            </div>
+
+                            <!-- Text Offset Fine Tune -->
+                            <div class="form-group">
+                                <div class="label-row">
+                                    <label for="text-offset-slider">Text Baseline Offset</label>
+                                    <span class="range-val" id="text-offset-val">Auto</span>
+                                </div>
+                                <input 
+                                    type="range" 
+                                    id="text-offset-slider" 
+                                    name="text_offset_y" 
+                                    min="-60" 
+                                    max="100" 
+                                    step="2" 
+                                    value="0" 
+                                    class="range-slider"
+                                />
+                                <div class="range-hints">
+                                    <span>-60 (Higher)</span>
+                                    <span>Auto (+50 prop)</span>
+                                    <span>+100 (Lower)</span>
+                                </div>
+                            </div>
+
+                            <!-- Output Settings -->
+                            <div class="form-row">
+                                <div class="form-group half">
+                                    <label for="output-format-select">Format</label>
+                                    <select id="output-format-select" name="output_format" class="select-input">
+                                        <option value="auto" selected>Auto (Same as Original)</option>
+                                        <option value="jpeg">JPEG (Quality 95)</option>
+                                        <option value="png">PNG (Lossless)</option>
+                                        <option value="webp">WebP</option>
+                                    </select>
+                                </div>
+                                <div class="form-group half">
+                                    <label for="quality-select">JPEG Quality</label>
+                                    <select id="quality-select" name="quality" class="select-input">
+                                        <option value="98">98% (Ultra)</option>
+                                        <option value="95" selected>95% (Recommended)</option>
+                                        <option value="90">90% (Web Optimized)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Auto Re-process Toggle -->
+                            <div class="toggle-group">
+                                <label class="switch">
+                                    <input type="checkbox" id="auto-preview-toggle" checked>
+                                    <span class="slider round"></span>
+                                </label>
+                                <span class="toggle-label">Instant Live Preview on Change</span>
+                            </div>
+                        </form>
+                    </aside>
+
+                    <!-- Right: Interactive Preview & Upload Studio -->
+                    <div class="preview-area">
+                        
+                        <!-- Upload Dropzone (Visible when no image selected) -->
+                        <div class="dropzone" id="single-dropzone">
+                            <input type="file" id="single-file-input" accept="image/jpeg,image/png,image/webp,image/bmp" class="file-input-hidden">
+                            <div class="dropzone-content">
+                                <div class="upload-icon-circle">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="upload-icon">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                        <polyline points="17 8 12 3 7 8"/>
+                                        <line x1="12" y1="3" x2="12" y2="15"/>
+                                    </svg>
+                                </div>
+                                <h3>Drop your photo here or <span class="browse-link">browse files</span></h3>
+                                <p class="dropzone-desc">Supports high-res JPG, PNG, WebP up to 50MB</p>
+                                <div class="dropzone-features">
+                                    <span class="pill"><kbd>Ctrl</kbd> + <kbd>V</kbd> Direct Clipboard Paste</span>
+                                    <span class="pill">Auto EXIF Camera Orientation</span>
+                                    <span class="pill">Full 6000&times;4000 Output</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Active Preview Container (Hidden initially) -->
+                        <div class="preview-container" id="preview-container" style="display: none;">
+                            
+                            <!-- Viewer Toolbar -->
+                            <div class="viewer-toolbar">
+                                <div class="file-meta">
+                                    <span class="file-name" id="preview-filename">image.jpg</span>
+                                    <span class="badge" id="preview-resolution">6000 &times; 4000</span>
+                                    <span class="badge badge-subtle" id="preview-filesize">5.8 MB</span>
+                                    <span class="badge badge-success" id="preview-duration">0.24s</span>
+                                </div>
+
+                                <div class="viewer-actions">
+                                    <div class="view-mode-toggle">
+                                        <button type="button" class="btn-toggle active" id="btn-mode-split" title="Interactive Split-View Slider">
+                                            Split Comparison
+                                        </button>
+                                        <button type="button" class="btn-toggle" id="btn-mode-side" title="Side by Side View">
+                                            Side-by-Side
+                                        </button>
+                                        <button type="button" class="btn-toggle" id="btn-mode-branded" title="Branded Result Only">
+                                            Branded Only
+                                        </button>
+                                    </div>
+                                    <button type="button" class="btn-icon" id="btn-fullscreen" title="Full Screen View">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="15 3 21 3 21 9"/>
+                                            <polyline points="9 21 3 21 3 15"/>
+                                            <line x1="21" y1="3" x2="14" y2="10"/>
+                                            <line x1="3" y1="21" x2="10" y2="14"/>
+                                        </svg>
+                                    </button>
+                                    <button type="button" class="btn-icon text-danger" id="btn-clear-single" title="Close and Upload Another">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <line x1="18" y1="6" x2="6" y2="18"/>
+                                            <line x1="6" y1="6" x2="18" y2="18"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Visual Display Canvas / Comparison Area -->
+                            <div class="comparison-wrapper" id="comparison-wrapper">
+                                
+                                <!-- Mode 1: Interactive Split View Slider -->
+                                <div class="split-comparison" id="split-comparison-box">
+                                    <!-- Original Base Layer -->
+                                    <div class="split-layer original-layer">
+                                        <img id="img-original" src="" alt="Original Image">
+                                        <span class="layer-badge badge-orig">Original</span>
+                                    </div>
+
+                                    <!-- Branded Top Layer (Clipped by slider) -->
+                                    <div class="split-layer branded-layer" id="branded-clip-layer">
+                                        <img id="img-branded" src="" alt="Branded Image">
+                                        <span class="layer-badge badge-branded">Branded (EWU + EWURC)</span>
+                                    </div>
+
+                                    <!-- Interactive Divider Handle -->
+                                    <div class="slider-handle" id="slider-handle">
+                                        <div class="handle-line"></div>
+                                        <div class="handle-circle">
+                                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                                <polygon points="8,12 12,7 12,17"/>
+                                                <polygon points="16,12 12,7 12,17" transform="rotate(180 14 12)"/>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Mode 2: Side-by-Side (Controlled via CSS) -->
+                                <div class="side-comparison" id="side-comparison-box" style="display: none;">
+                                    <div class="side-card">
+                                        <div class="side-card-header">Original</div>
+                                        <div class="side-card-img"><img id="img-side-original" src="" alt="Original"></div>
+                                    </div>
+                                    <div class="side-card">
+                                        <div class="side-card-header">EWURC Branded</div>
+                                        <div class="side-card-img"><img id="img-side-branded" src="" alt="Branded"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Loading Overlay Spinner -->
+                                <div class="processing-spinner" id="processing-spinner" style="display: none;">
+                                    <div class="spinner"></div>
+                                    <p id="spinner-text">Applying EWURC Branding...</p>
+                                </div>
+                            </div>
+
+                            <!-- Bottom Action Bar -->
+                            <div class="viewer-bottom-bar">
+                                <div class="branding-summary">
+                                    <span class="dot-brand"></span>
+                                    <span>EWU Logo (Left) + "East West University Robotics Club" + EWURC Logo (Right)</span>
+                                </div>
+                                <div class="download-actions">
+                                    <button type="button" class="btn btn-secondary" id="btn-reprocess">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon-sm">
+                                            <polyline points="23 4 23 10 17 10"/>
+                                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                                        </svg>
+                                        Re-Apply Settings
+                                    </button>
+                                    <button type="button" class="btn btn-primary" id="btn-download-hd">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon-sm">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                            <polyline points="7 10 12 15 17 10"/>
+                                            <line x1="12" y1="15" x2="12" y2="3"/>
+                                        </svg>
+                                        Download Branded Image
+                                    </button>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- TAB 2: Batch Processing Mode -->
+            <section class="tab-content" id="tab-batch">
+                <div class="batch-workspace">
+                    
+                    <!-- Top Batch Controls & Summary -->
+                    <div class="batch-top-card">
+                        <div class="batch-headline">
+                            <h2>Batch Photo Branding</h2>
+                            <p>Upload entire photo albums or multiple event pictures to watermark them in bulk.</p>
+                        </div>
+
+                        <div class="batch-actions-panel">
+                            <button type="button" class="btn btn-secondary" id="btn-batch-clear" disabled>
+                                Clear All
+                            </button>
+                            <button type="button" class="btn btn-primary" id="btn-start-batch" disabled>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon-sm">
+                                    <polygon points="5 3 19 12 5 21 5 3"/>
+                                </svg>
+                                Process All Photos
+                            </button>
+                            <button type="button" class="btn btn-success" id="btn-download-zip" disabled>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon-sm">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                    <polyline points="7 10 12 15 17 10"/>
+                                    <line x1="12" y1="15" x2="12" y2="3"/>
+                                </svg>
+                                Download All as ZIP
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Batch Progress Bar -->
+                    <div class="batch-progress-wrapper" id="batch-progress-box" style="display: none;">
+                        <div class="progress-info">
+                            <span id="batch-progress-text">Processing 0 of 0 images...</span>
+                            <span id="batch-progress-percent">0%</span>
+                        </div>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" id="batch-progress-fill" style="width: 0%;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Multi-Upload Dropzone -->
+                    <div class="batch-dropzone" id="batch-dropzone">
+                        <input type="file" id="batch-file-input" accept="image/jpeg,image/png,image/webp,image/bmp" multiple class="file-input-hidden">
+                        <div class="dropzone-content">
+                            <div class="upload-icon-circle">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="upload-icon">
+                                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                                    <line x1="12" y1="11" x2="12" y2="17"/>
+                                    <line x1="9" y1="14" x2="15" y2="14"/>
+                                </svg>
+                            </div>
+                            <h3>Drag & drop multiple event photos or <span class="browse-link">select files</span></h3>
+                            <p class="dropzone-desc">Select as many images as you need &bull; High performance concurrent processing</p>
+                        </div>
+                    </div>
+
+                    <!-- Batch Items Grid -->
+                    <div class="batch-grid" id="batch-grid">
+                        <!-- Populated by JavaScript -->
+                    </div>
+
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Toast Notifications -->
+        <div class="toast-container" id="toast-container"></div>
+
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
