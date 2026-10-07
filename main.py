@@ -73,16 +73,22 @@ async def serve_static_file(file_path: str):
 
 
 @app.get("/")
+@app.get("/api")
+@app.get("/api/")
+@app.get("/api/index")
+@app.get("/api/index.py")
 async def index():
     """Serves the main web studio frontend."""
     candidates = [
+        BASE_DIR / "public" / "index.html",
+        Path("public/index.html"),
         TEMPLATES_DIR / "index.html",
         Path("templates/index.html"),
         BASE_DIR / "templates" / "index.html"
     ]
     for p in candidates:
         if p.exists():
-            return FileResponse(str(p))
+            return FileResponse(str(p), media_type="text/html")
     raise HTTPException(status_code=404, detail="Template index.html not found")
 
 
