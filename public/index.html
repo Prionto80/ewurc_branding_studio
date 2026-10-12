@@ -1187,6 +1187,8 @@ kbd {
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="/static/js/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body class="dark-theme">
     <!-- Main App Container -->
@@ -1675,7 +1677,6 @@ kbd {
 
     </div>
 
-    <script src="/static/js/app.js"></script>
     <script>
 /**
  * EWURC Photo Branding Studio - Client Application
@@ -1683,6 +1684,13 @@ kbd {
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Prevent duplicate event listener bindings if script is loaded multiple times
+    if (window.__EWURC_STUDIO_INITIALIZED__) {
+        console.warn("EWURC Studio already initialized, skipping duplicate execution.");
+        return;
+    }
+    window.__EWURC_STUDIO_INITIALIZED__ = true;
+
     // State
     const state = {
         currentFile: null,
@@ -2611,62 +2619,81 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast(`Batch completed: ${processedCount} photos ready!`, "success");
     });
 
-    // Download All as ZIP (Server Endpoint or multi-download)
+    // Download All as ZIP (Client-Side JSZip with Server Fallback)
     btnDownloadZip.addEventListener('click', async () => {
         const completed = state.batchFiles.filter(f => f.status === 'done' && f.brandedBlob);
         if (completed.length === 0) return;
 
         btnDownloadZip.disabled = true;
         const originalText = btnDownloadZip.innerHTML;
-        btnDownloadZip.innerHTML = '<span>Packaging Photos...</span>';
+        btnDownloadZip.innerHTML = '<span>Packaging ZIP...</span>';
 
         try {
-            // If all files under 4MB, try server ZIP
+            // 1. Client-Side JSZip: 100% reliable, zero server limits, works on any host
+            if (typeof JSZip !== 'undefined') {
+                showToast(`Packaging ${completed.length} photos into ZIP...`, "info");
+                const zip = new JSZip();
+
+                completed.forEach(item => {
+                    const origName = item.file.name || 'photo.jpg';
+                    const dotIdx = origName.lastIndexOf('.');
+                    const baseName = dotIdx !== -1 ? origName.substring(0, dotIdx) : origName;
+                    let ext = dotIdx !== -1 ? origName.substring(dotIdx) : '.jpg';
+
+                    if (outputFormatSelect.value === 'jpeg') ext = '.jpg';
+                    else if (outputFormatSelect.value === 'png') ext = '.png';
+                    else if (outputFormatSelect.value === 'webp') ext = '.webp';
+
+                    const zipFilename = `branded_${baseName}${ext}`;
+                    zip.file(zipFilename, item.brandedBlob);
+                });
+
+                const zipBlob = await zip.generateAsync({
+                    type: 'blob',
+                    compression: 'DEFLATE',
+                    compressionOptions: { level: 6 }
+                });
+
+                triggerBlobDownload(zipBlob, 'ewurc_branded_photos.zip');
+                showToast("ZIP downloaded successfully!", "success");
+                return;
+            }
+
+            // 2. Server-side ZIP fallback if JSZip not yet loaded
             const totalBytes = completed.reduce((sum, item) => sum + item.file.size, 0);
             if (totalBytes < 4.0 * 1024 * 1024) {
-                try {
-                    const formData = new FormData();
-                    completed.forEach(item => formData.append('files', item.file));
-                    const opts = getCurrentOptions();
-                    formData.append('center_text', opts.centerText);
-                    formData.append('font_choice', opts.fontChoice);
-                    formData.append('logo_scale', opts.logoScale);
-                    formData.append('font_scale', opts.fontScale);
-                    formData.append('gradient_height_ratio', opts.gradientHeightRatio);
-                    formData.append('gradient_max_opacity', opts.gradientMaxOpacity);
-                    formData.append('padding', opts.padding);
-                    if (opts.textOffsetY !== null) formData.append('text_offset_y', opts.textOffsetY);
-                    formData.append('output_format', opts.outputFormat);
-                    formData.append('quality', opts.quality);
+                const formData = new FormData();
+                completed.forEach(item => formData.append('files', item.file));
+                const opts = getCurrentOptions();
+                formData.append('center_text', opts.centerText);
+                formData.append('font_choice', opts.fontChoice);
+                formData.append('logo_scale', opts.logoScale);
+                formData.append('font_scale', opts.fontScale);
+                formData.append('gradient_height_ratio', opts.gradientHeightRatio);
+                formData.append('gradient_max_opacity', opts.gradientMaxOpacity);
+                formData.append('padding', opts.padding);
+                if (opts.textOffsetY !== null) formData.append('text_offset_y', opts.textOffsetY);
+                formData.append('output_format', opts.outputFormat);
+                formData.append('quality', opts.quality);
 
-                    const response = await fetch('/api/process-batch', {
-                        method: 'POST',
-                        body: formData
-                    });
+                const response = await fetch('/api/process-batch', {
+                    method: 'POST',
+                    body: formData
+                });
 
-                    if (response.ok) {
-                        const zipBlob = await response.blob();
-                        triggerBlobDownload(zipBlob, 'ewurc_branded_photos.zip');
-                        showToast("ZIP download started!", "success");
-                        return;
-                    }
-                } catch (zErr) {
-                    console.warn("Server ZIP fallback:", zErr);
+                if (response.ok) {
+                    const zipBlob = await response.blob();
+                    triggerBlobDownload(zipBlob, 'ewurc_branded_photos.zip');
+                    showToast("ZIP download started!", "success");
+                    return;
                 }
             }
 
-            // Client-side sequential download for items
-            showToast(`Downloading ${completed.length} branded photos...`, "info");
-            for (let i = 0; i < completed.length; i++) {
-                const item = completed[i];
-                setTimeout(() => {
-                    triggerBlobDownload(item.brandedBlob, `branded_${item.file.name}`);
-                }, i * 350);
-            }
+            throw new Error("ZIP library is loading. Please try again in a few moments.");
 
         } catch (err) {
             console.error('Download error:', err);
-            showToast("Failed to download photos", "error");
+            showToast("Failed to create ZIP package: " + err.message, "error");
         } finally {
             btnDownloadZip.disabled = false;
             btnDownloadZip.innerHTML = originalText;
