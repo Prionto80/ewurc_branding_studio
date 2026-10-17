@@ -7,7 +7,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps
 try:
     import pillow_heif
     pillow_heif.register_heif_opener()
-except ImportError:
+except (ImportError, Exception):
     pass
 
 BASE_DIR = Path(__file__).resolve().parent

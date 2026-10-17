@@ -7,8 +7,14 @@ from pathlib import Path
 from typing import Optional, List
 
 from PIL import Image, ImageOps
-import pillow_heif
-pillow_heif.register_heif_opener()
+
+try:
+    import pillow_heif
+    pillow_heif.register_heif_opener()
+    HEIF_AVAILABLE = True
+except Exception as e:
+    HEIF_AVAILABLE = False
+    print(f"Notice: pillow_heif not available in this environment: {e}")
 
 import uvicorn
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Query
@@ -260,8 +266,14 @@ async def convert_heic_to_jpeg(
 ):
     """
     Converts an uploaded HEIC/HEIF photo to standard JPEG format.
-    Provides fast backend conversion for browsers lacking native HEIC codecs.
+    Provides fast backend conversion for environments with libheif support.
     """
+    if not HEIF_AVAILABLE:
+        raise HTTPException(
+            status_code=501,
+            detail="Server-side HEIC decoding not available on this host. Falling back to client-side WebAssembly conversion."
+        )
+
     if not is_valid_image_file(file):
         raise HTTPException(status_code=400, detail="Uploaded file must be a valid HEIC/HEIF image")
 

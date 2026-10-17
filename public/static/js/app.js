@@ -155,37 +155,136 @@ document.addEventListener('DOMContentLoaded', () => {
         return /\.(jpe?g|png|webp|bmp|heic|heif|tiff?)$/i.test(name);
     }
 
-    async function convertHeicToJpeg(file) {
-        // 1. Try server-side fast conversion first (~30ms native C libheif via Pillow)
-        try {
-            const formData = new FormData();
-            formData.append('file', file);
-            const response = await fetch('/api/convert-heic', {
-                method: 'POST',
-                body: formData
-            });
-            if (response.ok) {
-                const blob = await response.blob();
-                const newName = (file.name || 'photo').replace(/\.(heic|heif)$/i, '.jpg');
-                return new File([blob], newName, { type: 'image/jpeg' });
+    let heic2anyLoadingPromise = null;
+    function ensureHeic2AnyLoaded() {
+        if (typeof heic2any !== 'undefined') {
+            return Promise.resolve(true);
+        }
+        if (heic2anyLoadingPromise) {
+            return heic2anyLoadingPromise;
+        }
+
+        heic2anyLoadingPromise = new Promise((resolve) => {
+            if (typeof heic2any !== 'undefined') {
+                return resolve(true);
             }
-        } catch (serverErr) {
-            console.warn("Backend /api/convert-heic unavailable, trying client-side heic2any:", serverErr);
+
+            console.log("Loading heic2any library from CDN...");
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/heic2any/0.0.4/heic2any.min.js';
+            script.onload = () => {
+                console.log("heic2any loaded successfully from cdnjs");
+                resolve(typeof heic2any !== 'undefined');
+            };
+            script.onerror = () => {
+                console.warn("cdnjs failed, trying jsdelivr fallback...");
+                const s2 = document.createElement('script');
+                s2.src = 'https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js';
+                s2.onload = () => resolve(typeof heic2any !== 'undefined');
+                s2.onerror = () => resolve(false);
+                document.head.appendChild(s2);
+            };
+            document.head.appendChild(script);
+        });
+
+        return heic2anyLoadingPromise;
+    }
+
+    async function convertHeicToJpeg(file) {
+        // 1. Try server-side fast conversion if file <= 4MB (Vercel payload constraint)
+        if (file.size <= 4.0 * 1024 * 1024) {
+            try {
+                const ctrl = new AbortController();
+                const timeoutId = setTimeout(() => ctrl.abort(), 6000);
+                const formData = new FormData();
+                formData.append('file', file);
+                const response = await fetch('/api/convert-heic', {
+                    method: 'POST',
+                    body: formData,
+                    signal: ctrl.signal
+                });
+                clearTimeout(timeoutId);
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    if (blob && blob.size > 0) {
+                        const newName = (file.name || 'photo').replace(/\.(heic|heif)$/i, '.jpg');
+                        return new File([blob], newName, { type: 'image/jpeg', lastModified: file.lastModified || Date.now() });
+                    }
+                }
+            } catch (serverErr) {
+                console.warn("Server conversion unavailable, using browser WebAssembly decoder:", serverErr);
+            }
         }
 
         // 2. Client-side fallback with heic2any (WebAssembly libheif decoder)
-        if (typeof heic2any !== 'undefined') {
-            const result = await heic2any({
-                blob: file,
-                toType: 'image/jpeg',
-                quality: 0.95
-            });
-            const blob = Array.isArray(result) ? result[0] : result;
-            const newName = (file.name || 'photo').replace(/\.(heic|heif)$/i, '.jpg');
-            return new File([blob], newName, { type: 'image/jpeg' });
+        await ensureHeic2AnyLoaded();
+        if (typeof heic2any === 'undefined') {
+            throw new Error("HEIC decoder library could not be loaded. Please check your internet connection.");
         }
 
-        throw new Error("Unable to decode HEIC file. Neither server conversion nor heic2any library is available.");
+        const result = await heic2any({
+            blob: file,
+            toType: 'image/jpeg',
+            quality: 0.92
+        });
+
+        const resultBlob = Array.isArray(result) ? result[0] : result;
+        if (!resultBlob || !(resultBlob instanceof Blob)) {
+            throw new Error("Invalid output received from HEIC decoder");
+        }
+
+        const newName = (file.name || 'photo').replace(/\.(heic|heif)$/i, '.jpg');
+        return new File([resultBlob], newName, { type: 'image/jpeg', lastModified: file.lastModified || Date.now() });
+    }
+
+    /* ========================================================================
+       HEIC Sequential Decoding Queue
+       Runs exactly 1 WebAssembly conversion at a time to prevent OOM / crashes
+       ======================================================================== */
+    let isDecodingHeicQueue = false;
+    const pendingHeicQueue = [];
+
+    function enqueueHeicFiles(items) {
+        pendingHeicQueue.push(...items);
+        if (!isDecodingHeicQueue) {
+            processNextHeicInQueue();
+        }
+    }
+
+    async function processNextHeicInQueue() {
+        if (isDecodingHeicQueue) return;
+        isDecodingHeicQueue = true;
+
+        while (pendingHeicQueue.length > 0) {
+            const item = pendingHeicQueue.shift();
+
+            // Check if item is still in state.batchFiles and still converting
+            const currentItem = state.batchFiles.find(f => f.id === item.id);
+            if (!currentItem || currentItem.status !== 'converting') {
+                continue;
+            }
+
+            try {
+                const convertedFile = await convertHeicToJpeg(currentItem.file);
+                currentItem.file = convertedFile;
+                currentItem.originalUrl = URL.createObjectURL(convertedFile);
+                currentItem.status = 'ready';
+            } catch (err) {
+                console.error(`Failed to decode HEIC file ${currentItem.file.name}:`, err);
+                currentItem.status = 'error';
+                showToast(`Could not decode ${currentItem.file.name}: ${err.message || 'HEIC decoding error'}`, 'error', 4000);
+            }
+
+            renderBatchGrid();
+            updateBatchControls();
+
+            // Pause briefly (60ms) to let browser garbage collector reclaim WASM buffers
+            await new Promise(r => setTimeout(r, 60));
+        }
+
+        isDecodingHeicQueue = false;
+        updateBatchControls();
     }
 
     /* ========================================================================
@@ -813,46 +912,28 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const heicCount = imageFiles.filter(f => isHeicFile(f)).length;
-        if (heicCount > 0) {
-            showToast(`Decoding ${heicCount} HEIC photo(s)...`, "info", 3000);
+        const heicFiles = imageFiles.filter(f => isHeicFile(f));
+        if (heicFiles.length > 0) {
+            showToast(`Decoding ${heicFiles.length} HEIC photo(s)...`, "info", 3500);
         }
+
+        const heicItemsToQueue = [];
 
         imageFiles.forEach(file => {
             const id = 'batch_' + Math.random().toString(36).substring(2, 9);
             const isHeic = isHeicFile(file);
 
             if (isHeic) {
-                state.batchFiles.push({
+                const item = {
                     id,
                     file,
                     status: 'converting',
                     originalUrl: null,
                     brandedBlob: null,
                     brandedUrl: null
-                });
-
-                (async () => {
-                    try {
-                        const convertedFile = await convertHeicToJpeg(file);
-                        const idx = state.batchFiles.findIndex(item => item.id === id);
-                        if (idx !== -1) {
-                            state.batchFiles[idx].file = convertedFile;
-                            state.batchFiles[idx].originalUrl = URL.createObjectURL(convertedFile);
-                            state.batchFiles[idx].status = 'ready';
-                            renderBatchGrid();
-                            updateBatchControls();
-                        }
-                    } catch (err) {
-                        console.error("Batch HEIC conversion error:", err);
-                        const idx = state.batchFiles.findIndex(item => item.id === id);
-                        if (idx !== -1) {
-                            state.batchFiles[idx].status = 'error';
-                            renderBatchGrid();
-                            updateBatchControls();
-                        }
-                    }
-                })();
+                };
+                state.batchFiles.push(item);
+                heicItemsToQueue.push(item);
             } else {
                 const originalUrl = URL.createObjectURL(file);
                 state.batchFiles.push({
@@ -869,6 +950,10 @@ document.addEventListener('DOMContentLoaded', () => {
         renderBatchGrid();
         updateBatchControls();
         showToast(`Added ${imageFiles.length} photos to batch queue`, "info");
+
+        if (heicItemsToQueue.length > 0) {
+            enqueueHeicFiles(heicItemsToQueue);
+        }
     }
 
     function updateBatchControls() {
@@ -876,7 +961,8 @@ document.addEventListener('DOMContentLoaded', () => {
         batchBadge.textContent = count;
         batchBadge.style.display = count > 0 ? 'inline-block' : 'none';
 
-        btnStartBatch.disabled = count === 0;
+        const isConverting = state.batchFiles.some(f => f.status === 'converting');
+        btnStartBatch.disabled = count === 0 || isConverting;
         btnBatchClear.disabled = count === 0;
 
         const hasCompleted = state.batchFiles.some(f => f.status === 'done');
@@ -951,6 +1037,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function removeBatchItem(id) {
+        const qIdx = pendingHeicQueue.findIndex(f => f.id === id);
+        if (qIdx !== -1) pendingHeicQueue.splice(qIdx, 1);
+
         const idx = state.batchFiles.findIndex(f => f.id === id);
         if (idx !== -1) {
             const item = state.batchFiles[idx];
@@ -963,6 +1052,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     btnBatchClear.addEventListener('click', () => {
+        pendingHeicQueue.length = 0;
         state.batchFiles.forEach(item => {
             if (item.originalUrl) URL.revokeObjectURL(item.originalUrl);
             if (item.brandedUrl) URL.revokeObjectURL(item.brandedUrl);
