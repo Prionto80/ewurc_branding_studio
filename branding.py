@@ -4,6 +4,12 @@ from typing import Optional, Union, Tuple
 import io
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 
+try:
+    import pillow_heif
+    pillow_heif.register_heif_opener()
+except ImportError:
+    pass
+
 BASE_DIR = Path(__file__).resolve().parent
 DEFAULT_LOGO_LEFT_PATH = BASE_DIR / "ewu.png"
 DEFAULT_LOGO_RIGHT_PATH = BASE_DIR / "ewurc.png"
@@ -231,7 +237,7 @@ def process_image_bytes(
         width, height = branded.size
 
         fmt = output_format.upper()
-        if fmt not in {"JPEG", "JPG", "PNG", "WEBP"}:
+        if fmt not in {"JPEG", "JPG", "PNG", "WEBP", "HEIC", "HEIF"}:
             fmt = "JPEG"
 
         output_buffer = io.BytesIO()
@@ -245,6 +251,9 @@ def process_image_bytes(
         elif fmt == "WEBP":
             branded.save(output_buffer, format="WEBP", quality=quality)
             mime = "image/webp"
+        elif fmt in {"HEIC", "HEIF"}:
+            branded.convert("RGB").save(output_buffer, format="HEIF", quality=quality)
+            mime = "image/heic"
 
         return output_buffer.getvalue(), mime, (width, height)
 
@@ -270,7 +279,7 @@ def add_bottom_branding(
         logo_r = lr.convert("RGBA")
         logo_l = ll.convert("RGBA")
 
-        valid_exts = {".jpg", ".jpeg", ".png", ".webp", ".bmp"}
+        valid_exts = {".jpg", ".jpeg", ".png", ".webp", ".bmp", ".heic", ".heif"}
 
         for filename in os.listdir(image_dir):
             base, ext = os.path.splitext(filename)
@@ -294,6 +303,12 @@ def add_bottom_branding(
                     save_path = os.path.join(output_dir, filename)
                     if ext.lower() in {".jpg", ".jpeg"}:
                         branded.convert("RGB").save(save_path, quality=95)
+                    elif ext.lower() in {".heic", ".heif"}:
+                        try:
+                            branded.convert("RGB").save(save_path, format="HEIF", quality=95)
+                        except Exception:
+                            jpg_path = os.path.splitext(save_path)[0] + ".jpg"
+                            branded.convert("RGB").save(jpg_path, quality=95)
                     else:
                         branded.save(save_path)
                     print(f"Processed: {filename}")

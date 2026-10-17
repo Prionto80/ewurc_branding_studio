@@ -7,6 +7,9 @@ from pathlib import Path
 from typing import Optional, List
 
 from PIL import Image, ImageOps
+import pillow_heif
+pillow_heif.register_heif_opener()
+
 import uvicorn
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Query
 from fastapi.responses import FileResponse, Response, StreamingResponse, JSONResponse
@@ -66,10 +69,30 @@ async def serve_static_file(file_path: str):
                 media_type = "image/png"
             elif ext in {".jpg", ".jpeg"}:
                 media_type = "image/jpeg"
+            elif ext in {".heic", ".heif"}:
+                media_type = "image/heic"
+            elif ext == ".webp":
+                media_type = "image/webp"
             elif ext == ".otf":
                 media_type = "font/otf"
             return FileResponse(str(c), media_type=media_type)
     raise HTTPException(status_code=404, detail=f"File {file_path} not found")
+
+
+SUPPORTED_IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".bmp", ".heic", ".heif", ".tif", ".tiff"}
+
+
+def is_valid_image_file(file: UploadFile) -> bool:
+    """Validates whether an uploaded file is an image by MIME type or extension."""
+    if file.content_type:
+        ct = file.content_type.lower()
+        if ct.startswith("image/"):
+            return True
+        if ct in {"application/octet-stream"}:
+            ext = Path(file.filename or "").suffix.lower()
+            return ext in SUPPORTED_IMAGE_EXTS
+    ext = Path(file.filename or "").suffix.lower()
+    return ext in SUPPORTED_IMAGE_EXTS
 
 
 @app.get("/")
@@ -131,8 +154,8 @@ async def process_single_image(
     """
     Processes a single uploaded image with EWU & EWURC logos and typography.
     """
-    if not file.content_type or not file.content_type.startswith("image/"):
-        raise HTTPException(status_code=400, detail="Uploaded file must be a valid image")
+    if not is_valid_image_file(file):
+        raise HTTPException(status_code=400, detail="Uploaded file must be a valid image (JPG, PNG, WebP, HEIC)")
 
     try:
         contents = await file.read()
@@ -187,6 +210,8 @@ async def process_single_image(
                 target_fmt = "PNG"
             elif original_ext in {".webp"}:
                 target_fmt = "WEBP"
+            elif original_ext in {".heic", ".heif"}:
+                target_fmt = "JPEG"
             else:
                 target_fmt = "JPEG"
 
@@ -199,6 +224,10 @@ async def process_single_image(
             branded.save(out_buffer, format="WEBP", quality=quality)
             mime = "image/webp"
             ext = ".webp"
+        elif target_fmt in {"HEIC", "HEIF"}:
+            branded.convert("RGB").save(out_buffer, format="HEIF", quality=quality)
+            mime = "image/heic"
+            ext = ".heic"
         else:
             branded.convert("RGB").save(out_buffer, format="JPEG", quality=quality)
             mime = "image/jpeg"
@@ -222,6 +251,43 @@ async def process_single_image(
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Image processing failed: {str(e)}")
+
+
+@app.post("/api/convert-heic")
+async def convert_heic_to_jpeg(
+    file: UploadFile = File(...),
+    quality: int = Form(95)
+):
+    """
+    Converts an uploaded HEIC/HEIF photo to standard JPEG format.
+    Provides fast backend conversion for browsers lacking native HEIC codecs.
+    """
+    if not is_valid_image_file(file):
+        raise HTTPException(status_code=400, detail="Uploaded file must be a valid HEIC/HEIF image")
+
+    try:
+        contents = await file.read()
+        raw_img = Image.open(io.BytesIO(contents))
+        raw_img = ImageOps.exif_transpose(raw_img)
+
+        out_buffer = io.BytesIO()
+        raw_img.convert("RGB").save(out_buffer, format="JPEG", quality=quality)
+        out_bytes = out_buffer.getvalue()
+
+        base_name = Path(file.filename or "photo").stem
+        out_filename = f"{base_name}.jpg"
+
+        return Response(
+            content=out_bytes,
+            media_type="image/jpeg",
+            headers={
+                "Content-Disposition": f'inline; filename="{out_filename}"',
+                "X-Image-Width": str(raw_img.width),
+                "X-Image-Height": str(raw_img.height)
+            }
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"HEIC conversion failed: {str(e)}")
 
 
 @app.post("/api/process-batch")
@@ -249,6 +315,8 @@ async def process_batch_images(
 
     with zipfile.ZipFile(zip_buffer, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
         for f in files:
+            if not is_valid_image_file(f):
+                continue
             try:
                 contents = await f.read()
                 raw_img = Image.open(io.BytesIO(contents))
@@ -273,6 +341,8 @@ async def process_batch_images(
                         target_fmt = "PNG"
                     elif original_ext in {".webp"}:
                         target_fmt = "WEBP"
+                    elif original_ext in {".heic", ".heif"}:
+                        target_fmt = "JPEG"
                     else:
                         target_fmt = "JPEG"
 
@@ -283,6 +353,9 @@ async def process_batch_images(
                 elif target_fmt == "WEBP":
                     branded.save(img_buf, format="WEBP", quality=quality)
                     ext = ".webp"
+                elif target_fmt in {"HEIC", "HEIF"}:
+                    branded.convert("RGB").save(img_buf, format="HEIF", quality=quality)
+                    ext = ".heic"
                 else:
                     branded.convert("RGB").save(img_buf, format="JPEG", quality=quality)
                     ext = ".jpg"

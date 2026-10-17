@@ -34,8 +34,11 @@ An automated FastAPI web application and media toolkit for **East West Universit
   - Gradient Darkness / Max Opacity (50 – 255).
   - Edge Padding (0px – 120px).
   - Baseline Offset adjustment (Auto / Proportional / Manual).
-  - Format (Auto, JPEG 95% HQ, PNG Lossless, WebP).
+  - Format (Auto, JPEG 95% HQ, PNG Lossless, WebP, HEIC).
   - One-click "Reset to EWURC Defaults" button.
+- **📱 Apple iPhone HEIC & HEIF Native Support**:
+  - Full support for `.heic` and `.heif` photos from iOS and modern Android phones.
+  - Hybrid client + server decoding: instant decoding with fallback to `heic2any` WebAssembly.
 - **💻 CLI & Batch Compatibility**:
   - Legacy directory processing can still be run via CLI commands.
 
@@ -50,6 +53,7 @@ An automated FastAPI web application and media toolkit for **East West Universit
   - `fastapi`
   - `uvicorn`
   - `pillow`
+  - `pillow-heif`
   - `python-multipart`
 
 ### 2. Run the Web Application

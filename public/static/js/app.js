@@ -139,6 +139,56 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /* ========================================================================
+       HEIC / Image Format Detection & Conversion Engine
+       ======================================================================== */
+    function isHeicFile(file) {
+        if (!file) return false;
+        const name = (file.name || '').toLowerCase();
+        const type = (file.type || '').toLowerCase();
+        return name.endsWith('.heic') || name.endsWith('.heif') || type === 'image/heic' || type === 'image/heif';
+    }
+
+    function isValidImageFile(file) {
+        if (!file) return false;
+        if (file.type && file.type.startsWith('image/')) return true;
+        const name = (file.name || '').toLowerCase();
+        return /\.(jpe?g|png|webp|bmp|heic|heif|tiff?)$/i.test(name);
+    }
+
+    async function convertHeicToJpeg(file) {
+        // 1. Try server-side fast conversion first (~30ms native C libheif via Pillow)
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            const response = await fetch('/api/convert-heic', {
+                method: 'POST',
+                body: formData
+            });
+            if (response.ok) {
+                const blob = await response.blob();
+                const newName = (file.name || 'photo').replace(/\.(heic|heif)$/i, '.jpg');
+                return new File([blob], newName, { type: 'image/jpeg' });
+            }
+        } catch (serverErr) {
+            console.warn("Backend /api/convert-heic unavailable, trying client-side heic2any:", serverErr);
+        }
+
+        // 2. Client-side fallback with heic2any (WebAssembly libheif decoder)
+        if (typeof heic2any !== 'undefined') {
+            const result = await heic2any({
+                blob: file,
+                toType: 'image/jpeg',
+                quality: 0.95
+            });
+            const blob = Array.isArray(result) ? result[0] : result;
+            const newName = (file.name || 'photo').replace(/\.(heic|heif)$/i, '.jpg');
+            return new File([blob], newName, { type: 'image/jpeg' });
+        }
+
+        throw new Error("Unable to decode HEIC file. Neither server conversion nor heic2any library is available.");
+    }
+
+    /* ========================================================================
        Tab Navigation
        ======================================================================== */
     function switchTab(tabName) {
@@ -447,20 +497,39 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    function loadSingleFile(file) {
-        if (!file.type.startsWith('image/')) {
-            showToast("Please select a valid image file (JPG, PNG, WebP).", "error");
+    async function loadSingleFile(file) {
+        if (!isValidImageFile(file)) {
+            showToast("Please select a valid image file (JPG, PNG, WebP, HEIC).", "error");
             return;
         }
 
-        state.currentFile = file;
+        let processedFile = file;
+        const isHeic = isHeicFile(file);
+
+        if (isHeic) {
+            processingSpinner.style.display = 'flex';
+            spinnerText.textContent = 'Decoding Apple HEIC photo...';
+            showToast("Converting HEIC photo for editing...", "info", 3000);
+            try {
+                processedFile = await convertHeicToJpeg(file);
+            } catch (err) {
+                console.error("HEIC conversion failed:", err);
+                processingSpinner.style.display = 'none';
+                showToast("Could not decode HEIC file: " + err.message, "error");
+                return;
+            } finally {
+                processingSpinner.style.display = 'none';
+            }
+        }
+
+        state.currentFile = processedFile;
         previewFilename.textContent = file.name || "pasted_image.png";
-        previewFilesize.textContent = formatBytes(file.size);
+        previewFilesize.textContent = formatBytes(processedFile.size);
 
         if (state.originalUrl) {
             URL.revokeObjectURL(state.originalUrl);
         }
-        state.originalUrl = URL.createObjectURL(file);
+        state.originalUrl = URL.createObjectURL(processedFile);
         
         // Measure dimensions
         const testImg = new Image();
@@ -591,6 +660,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (outputFormatSelect.value === 'jpeg') ext = '.jpg';
         else if (outputFormatSelect.value === 'png') ext = '.png';
         else if (outputFormatSelect.value === 'webp') ext = '.webp';
+        else if (outputFormatSelect.value === 'heic') ext = '.heic';
+        else if (outputFormatSelect.value === 'auto') {
+            if (ext.toLowerCase() === '.heic' || ext.toLowerCase() === '.heif') {
+                ext = '.jpg';
+            }
+        }
 
         return `branded_${baseName}${ext}`;
     }
@@ -732,23 +807,63 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function addBatchFiles(files) {
-        const imageFiles = files.filter(f => f.type.startsWith('image/'));
+        const imageFiles = files.filter(f => isValidImageFile(f));
         if (imageFiles.length === 0) {
             showToast("No valid image files found.", "error");
             return;
         }
 
+        const heicCount = imageFiles.filter(f => isHeicFile(f)).length;
+        if (heicCount > 0) {
+            showToast(`Decoding ${heicCount} HEIC photo(s)...`, "info", 3000);
+        }
+
         imageFiles.forEach(file => {
             const id = 'batch_' + Math.random().toString(36).substring(2, 9);
-            const originalUrl = URL.createObjectURL(file);
-            state.batchFiles.push({
-                id,
-                file,
-                status: 'ready',
-                originalUrl,
-                brandedBlob: null,
-                brandedUrl: null
-            });
+            const isHeic = isHeicFile(file);
+
+            if (isHeic) {
+                state.batchFiles.push({
+                    id,
+                    file,
+                    status: 'converting',
+                    originalUrl: null,
+                    brandedBlob: null,
+                    brandedUrl: null
+                });
+
+                (async () => {
+                    try {
+                        const convertedFile = await convertHeicToJpeg(file);
+                        const idx = state.batchFiles.findIndex(item => item.id === id);
+                        if (idx !== -1) {
+                            state.batchFiles[idx].file = convertedFile;
+                            state.batchFiles[idx].originalUrl = URL.createObjectURL(convertedFile);
+                            state.batchFiles[idx].status = 'ready';
+                            renderBatchGrid();
+                            updateBatchControls();
+                        }
+                    } catch (err) {
+                        console.error("Batch HEIC conversion error:", err);
+                        const idx = state.batchFiles.findIndex(item => item.id === id);
+                        if (idx !== -1) {
+                            state.batchFiles[idx].status = 'error';
+                            renderBatchGrid();
+                            updateBatchControls();
+                        }
+                    }
+                })();
+            } else {
+                const originalUrl = URL.createObjectURL(file);
+                state.batchFiles.push({
+                    id,
+                    file,
+                    status: 'ready',
+                    originalUrl,
+                    brandedBlob: null,
+                    brandedUrl: null
+                });
+            }
         });
 
         renderBatchGrid();
@@ -778,6 +893,8 @@ document.addEventListener('DOMContentLoaded', () => {
             let badgeHtml = '';
             if (item.status === 'ready') {
                 badgeHtml = '<span class="badge badge-subtle">Ready</span>';
+            } else if (item.status === 'converting') {
+                badgeHtml = '<span class="badge badge-accent">Decoding HEIC...</span>';
             } else if (item.status === 'processing') {
                 badgeHtml = '<span class="badge badge-accent">Processing...</span>';
             } else if (item.status === 'done') {
@@ -787,10 +904,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const displayUrl = item.brandedUrl || item.originalUrl;
+            const thumbContent = displayUrl
+                ? `<img src="${displayUrl}" alt="${item.file.name}" loading="lazy">`
+                : `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#94A3B8;font-size:0.75rem;">Decoding HEIC...</div>`;
 
             card.innerHTML = `
                 <div class="batch-item-thumb">
-                    <img src="${displayUrl}" alt="${item.file.name}" loading="lazy">
+                    ${thumbContent}
                     <div class="batch-item-badge">${badgeHtml}</div>
                 </div>
                 <div class="batch-item-info">
@@ -868,6 +988,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         for (let i = 0; i < total; i++) {
             const item = state.batchFiles[i];
+            if (item.status === 'converting') {
+                for (let retry = 0; retry < 25 && item.status === 'converting'; retry++) {
+                    await new Promise(r => setTimeout(r, 200));
+                }
+            }
+            if (item.status === 'error') continue;
+
             item.status = 'processing';
             renderBatchGrid();
 
@@ -963,6 +1090,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (outputFormatSelect.value === 'jpeg') ext = '.jpg';
                     else if (outputFormatSelect.value === 'png') ext = '.png';
                     else if (outputFormatSelect.value === 'webp') ext = '.webp';
+                    else if (outputFormatSelect.value === 'heic') ext = '.heic';
+                    else if (outputFormatSelect.value === 'auto') {
+                        if (ext.toLowerCase() === '.heic' || ext.toLowerCase() === '.heif') {
+                            ext = '.jpg';
+                        }
+                    }
 
                     const zipFilename = `branded_${baseName}${ext}`;
                     zip.file(zipFilename, item.brandedBlob);
